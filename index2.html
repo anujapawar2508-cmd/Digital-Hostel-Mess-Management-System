@@ -1,0 +1,1908 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>MessMate — Hostel Mess Management</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<style>
+:root{
+  --bg:#0a0f1e;--surface:#111827;--surface2:#1a2235;--border:#1f2e47;
+  --accent:#f97316;--accent2:#fb923c;--green:#22c55e;--red:#ef4444;
+  --yellow:#eab308;--blue:#3b82f6;--purple:#a855f7;--pink:#ec4899;
+  --text:#f1f5f9;--muted:#64748b;--card:#151f33;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh;}
+h1,h2,h3,h4{font-family:'Syne',sans-serif;}
+.hidden{display:none!important;}
+
+/* ── AUTH ── */
+.auth-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;
+  background:radial-gradient(ellipse at 20% 50%,#1a0a2e 0%,transparent 60%),
+  radial-gradient(ellipse at 80% 20%,#0f1f3a 0%,transparent 60%),var(--bg);}
+.auth-box{width:460px;background:var(--surface);border:1px solid var(--border);border-radius:24px;padding:36px;position:relative;overflow:hidden;max-height:90vh;overflow-y:auto;}
+.auth-box::-webkit-scrollbar{width:4px;}
+.auth-box::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px;}
+.auth-box::before{content:'';position:absolute;top:-80px;right:-80px;width:200px;height:200px;
+  background:radial-gradient(circle,rgba(249,115,22,0.15)0%,transparent 70%);border-radius:50%;pointer-events:none;}
+.auth-logo{font-size:26px;font-weight:800;margin-bottom:6px;}
+.auth-logo span{color:var(--accent);}
+.auth-sub{color:var(--muted);font-size:13px;margin-bottom:20px;}
+.tab-row{display:flex;background:var(--bg);border-radius:12px;padding:4px;margin-bottom:20px;}
+.tab-btn{flex:1;padding:9px;border:none;background:transparent;color:var(--muted);border-radius:9px;cursor:pointer;font-family:'Syne',sans-serif;font-weight:600;font-size:13px;transition:all .2s;}
+.tab-btn.active{background:var(--accent);color:#fff;}
+.field{margin-bottom:12px;}
+.field label{display:block;font-size:11px;color:var(--muted);margin-bottom:4px;font-weight:500;letter-spacing:.05em;text-transform:uppercase;}
+.req{color:var(--red);}
+.field input,.field select{width:100%;padding:10px 13px;background:var(--bg);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:14px;outline:none;transition:border .2s;}
+.field input:focus,.field select:focus{border-color:var(--accent);}
+.field select option{background:var(--surface);}
+.name-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.err{color:var(--red);font-size:11px;margin-top:3px;display:none;}
+.global-err{color:var(--red);font-size:13px;margin:8px 0;display:none;padding:8px 12px;background:rgba(239,68,68,.1);border-radius:8px;border:1px solid rgba(239,68,68,.2);}
+.btn{width:100%;padding:12px;background:var(--accent);border:none;border-radius:11px;color:#fff;font-family:'Syne',sans-serif;font-weight:700;font-size:15px;cursor:pointer;transition:all .2s;margin-top:6px;}
+.btn:hover{background:var(--accent2);transform:translateY(-1px);}
+.btn:disabled{opacity:.6;cursor:not-allowed;transform:none;}
+.role-select{display:flex;gap:8px;margin-bottom:16px;}
+.role-opt{flex:1;padding:10px 6px;border:2px solid var(--border);border-radius:11px;text-align:center;cursor:pointer;transition:all .2s;font-size:12px;font-weight:600;}
+.role-opt.active{border-color:var(--accent);background:rgba(249,115,22,.08);color:var(--accent);}
+.role-opt .ricon{font-size:18px;display:block;margin-bottom:2px;}
+.info-box{border-radius:10px;padding:10px 13px;margin-bottom:12px;font-size:12px;}
+.info-box.blue{background:rgba(59,130,246,.08);border:1px solid rgba(59,130,246,.2);color:#93c5fd;}
+.info-box.orange{background:rgba(249,115,22,.08);border:1px solid rgba(249,115,22,.2);color:#fdba74;}
+.info-box.green{background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.2);color:#86efac;}
+
+/* ── HOSTEL CARDS ── */
+.hostel-card{width:200px;background:var(--surface);border:2px solid var(--border);border-radius:20px;padding:26px 20px;cursor:pointer;transition:all .25s;text-align:center;position:relative;overflow:hidden;}
+.hostel-card::before{content:'';position:absolute;bottom:-40px;left:50%;transform:translateX(-50%);width:120px;height:120px;border-radius:50%;opacity:.08;}
+#boysCard::before{background:var(--blue);}
+#girlsCard::before{background:var(--pink);}
+.hostel-card:hover{transform:translateY(-5px);}
+#boysCard:hover{border-color:var(--blue);box-shadow:0 16px 32px rgba(59,130,246,.15);}
+#girlsCard:hover{border-color:var(--pink);box-shadow:0 16px 32px rgba(236,72,153,.15);}
+.hostel-icon{font-size:44px;margin-bottom:12px;display:block;}
+.hostel-label{font-family:'Syne',sans-serif;font-size:18px;font-weight:800;margin-bottom:4px;}
+.hostel-count{display:inline-block;padding:3px 12px;border-radius:99px;font-size:11px;font-weight:600;margin-bottom:14px;}
+#boysCard .hostel-count{background:rgba(59,130,246,.12);color:var(--blue);}
+#girlsCard .hostel-count{background:rgba(236,72,153,.12);color:var(--pink);}
+.hostel-btn{padding:8px 18px;border-radius:10px;font-family:'Syne',sans-serif;font-weight:700;font-size:12px;}
+.boys-btn{background:rgba(59,130,246,.15);color:var(--blue);border:1px solid rgba(59,130,246,.3);}
+.girls-btn{background:rgba(236,72,153,.15);color:var(--pink);border:1px solid rgba(236,72,153,.3);}
+#boysCard:hover .boys-btn{background:var(--blue);color:#fff;}
+#girlsCard:hover .girls-btn{background:var(--pink);color:#fff;}
+.hostel-chip{display:inline-flex;align-items:center;gap:5px;padding:4px 12px;border-radius:99px;font-size:12px;font-weight:600;margin-bottom:16px;}
+.hostel-chip.boys{background:rgba(59,130,246,.12);color:var(--blue);}
+.hostel-chip.girls{background:rgba(236,72,153,.12);color:var(--pink);}
+
+/* ── LAYOUT ── */
+.app{display:flex;min-height:100vh;}
+.sidebar{width:230px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;padding:22px 0;position:fixed;height:100vh;z-index:10;overflow-y:auto;}
+.sidebar-logo{font-size:20px;font-weight:800;padding:0 22px 6px;}
+.sidebar-logo span{color:var(--accent);}
+.sidebar-hostel{font-size:11px;color:var(--muted);padding:0 22px 22px;}
+.nav-item{display:flex;align-items:center;gap:11px;padding:11px 22px;cursor:pointer;color:var(--muted);font-weight:500;font-size:13px;transition:all .2s;border-left:3px solid transparent;margin-bottom:1px;}
+.nav-item:hover{color:var(--text);background:var(--surface2);}
+.nav-item.active{color:var(--accent);border-left-color:var(--accent);background:rgba(249,115,22,.06);}
+.nav-item .nicon{font-size:16px;width:18px;text-align:center;}
+.nav-bottom{margin-top:auto;padding:16px;}
+.logout-btn{width:100%;padding:10px;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.2);border-radius:10px;color:var(--red);cursor:pointer;font-family:'DM Sans',sans-serif;font-weight:500;font-size:13px;transition:all .2s;}
+.logout-btn:hover{background:rgba(239,68,68,.2);}
+.main{margin-left:230px;flex:1;padding:26px 28px;}
+.topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;}
+.page-title{font-size:22px;font-weight:800;}
+.topbar-right{display:flex;align-items:center;gap:12px;}
+.date-chip{background:var(--surface2);border:1px solid var(--border);border-radius:9px;padding:5px 12px;font-size:12px;color:var(--muted);}
+.notif-btn{position:relative;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:9px 12px;cursor:pointer;font-size:16px;transition:all .2s;}
+.notif-btn:hover{border-color:var(--accent);}
+.notif-badge{position:absolute;top:-5px;right:-5px;background:var(--red);color:#fff;border-radius:50%;width:16px;height:16px;font-size:9px;display:none;align-items:center;justify-content:center;font-weight:700;}
+.user-chip{display:flex;align-items:center;gap:9px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:6px 12px;}
+.avatar{width:28px;height:28px;background:var(--accent);border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:11px;}
+
+/* ── CARDS ── */
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:18px;}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:18px;}
+.card{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:20px;}
+.stat-card{position:relative;overflow:hidden;}
+.stat-card::after{content:'';position:absolute;top:-20px;right:-20px;width:70px;height:70px;border-radius:50%;opacity:.12;}
+.sc-orange::after{background:var(--accent);}
+.sc-green::after{background:var(--green);}
+.sc-blue::after{background:var(--blue);}
+.sc-purple::after{background:var(--purple);}
+.stat-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px;}
+.stat-value{font-family:'Syne',sans-serif;font-size:32px;font-weight:800;}
+.sv-orange{color:var(--accent);}
+.sv-green{color:var(--green);}
+.sv-blue{color:var(--blue);}
+.sv-purple{color:var(--purple);}
+.stat-sub{font-size:11px;color:var(--muted);margin-top:3px;}
+.section-title{font-size:15px;font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:7px;}
+
+/* ── QR ── */
+.qr-wrap{background:#fff;border-radius:12px;padding:8px;display:inline-flex;align-items:center;justify-content:center;}
+
+/* ── CREDIT BAR ── */
+.cbar-wrap{margin-top:8px;}
+.cbar-labels{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-bottom:4px;}
+.cbar{height:6px;background:var(--border);border-radius:99px;overflow:hidden;}
+.cbar-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:99px;transition:width .8s ease;}
+
+/* ── MENU ── */
+.meal-card{background:var(--surface2);border:1px solid var(--border);border-radius:14px;padding:16px;}
+.meal-tag{display:inline-block;padding:3px 10px;border-radius:99px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px;}
+.mt-breakfast{background:rgba(234,179,8,.15);color:var(--yellow);}
+.mt-lunch{background:rgba(249,115,22,.15);color:var(--accent);}
+.mt-dinner{background:rgba(59,130,246,.15);color:var(--blue);}
+.meal-time{font-size:11px;color:var(--muted);margin-bottom:8px;}
+.meal-items{list-style:none;}
+.meal-items li{font-size:13px;padding:4px 0;border-bottom:1px solid var(--border);color:#cbd5e1;display:flex;align-items:center;gap:6px;}
+.meal-items li:last-child{border-bottom:none;}
+.meal-items li::before{content:'•';color:var(--accent);font-size:14px;line-height:1;}
+.stars{display:flex;gap:3px;margin-top:10px;cursor:pointer;}
+.star{font-size:18px;color:var(--border);transition:color .15s;}
+.star.lit{color:var(--yellow);}
+
+/* ── VOTE ── */
+.vote-wrap{text-align:center;padding:24px;}
+.vote-btns{display:flex;gap:12px;justify-content:center;margin-bottom:22px;}
+.vbtn{padding:13px 32px;border-radius:12px;border:none;font-family:'Syne',sans-serif;font-size:14px;font-weight:700;cursor:pointer;transition:all .2s;}
+.vbtn-yes{background:rgba(34,197,94,.15);color:var(--green);border:2px solid rgba(34,197,94,.3);}
+.vbtn-yes:hover,.vbtn-yes.active{background:var(--green);color:#fff;}
+.vbtn-no{background:rgba(239,68,68,.15);color:var(--red);border:2px solid rgba(239,68,68,.3);}
+.vbtn-no:hover,.vbtn-no.active{background:var(--red);color:#fff;}
+.vote-stats{display:flex;gap:20px;justify-content:center;}
+.vs-num{font-family:'Syne',sans-serif;font-size:24px;font-weight:800;}
+.vs-label{font-size:11px;color:var(--muted);}
+
+/* ── NOTIFICATIONS ── */
+.notif-panel{position:fixed;top:66px;right:28px;width:340px;background:var(--surface);border:1px solid var(--border);border-radius:18px;z-index:200;overflow:hidden;box-shadow:0 16px 48px rgba(0,0,0,.5);display:none;}
+.notif-panel.open{display:block;animation:slideDown .18s ease;}
+@keyframes slideDown{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
+.notif-head{padding:13px 16px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;}
+.notif-head h4{font-size:13px;font-weight:700;}
+.mark-all{font-size:11px;color:var(--accent);cursor:pointer;background:none;border:none;font-family:'DM Sans',sans-serif;}
+.notif-item{padding:11px 16px;border-bottom:1px solid var(--border);display:flex;gap:10px;align-items:flex-start;cursor:pointer;transition:background .15s;}
+.notif-item:hover{background:var(--surface2);}
+.notif-item.unread{background:rgba(249,115,22,.04);}
+.ndot{width:7px;height:7px;border-radius:50%;background:var(--accent);margin-top:4px;flex-shrink:0;}
+.ndot.read{background:transparent;border:1px solid var(--border);}
+.nmsg{font-size:12px;line-height:1.5;}
+.ntime{font-size:10px;color:var(--muted);margin-top:2px;}
+.notif-empty{padding:18px;text-align:center;color:var(--muted);font-size:12px;}
+
+/* ── TABLE ── */
+table{width:100%;border-collapse:collapse;}
+th{text-align:left;padding:10px 13px;font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);border-bottom:1px solid var(--border);}
+td{padding:12px 13px;font-size:13px;border-bottom:1px solid var(--border);}
+tr:last-child td{border-bottom:none;}
+tr:hover td{background:var(--surface2);}
+.badge{display:inline-block;padding:2px 8px;border-radius:99px;font-size:10px;font-weight:700;}
+.b-green{background:rgba(34,197,94,.15);color:var(--green);}
+.b-red{background:rgba(239,68,68,.15);color:var(--red);}
+.b-yellow{background:rgba(234,179,8,.15);color:var(--yellow);}
+.b-blue{background:rgba(59,130,246,.15);color:var(--blue);}
+.b-purple{background:rgba(168,85,247,.15);color:var(--purple);}
+.b-pink{background:rgba(236,72,153,.15);color:var(--pink);}
+.tbl-empty{text-align:center;color:var(--muted);padding:24px;font-size:13px;}
+
+/* ── SCANNER ── */
+.scan-box{width:240px;height:240px;border:3px solid var(--accent);border-radius:20px;display:flex;align-items:center;justify-content:center;position:relative;background:var(--surface2);overflow:hidden;margin-bottom:18px;}
+.scan-line{position:absolute;width:100%;height:2px;background:linear-gradient(90deg,transparent,var(--accent),transparent);animation:scanAnim 2s linear infinite;}
+@keyframes scanAnim{0%{top:0}100%{top:100%}}
+.scan-icon{font-size:50px;opacity:.2;}
+.scan-result{padding:12px 18px;border-radius:12px;font-weight:600;font-size:13px;margin-top:10px;text-align:center;}
+.sr-success{background:rgba(34,197,94,.15);color:var(--green);border:1px solid rgba(34,197,94,.3);}
+.sr-error{background:rgba(239,68,68,.15);color:var(--red);border:1px solid rgba(239,68,68,.3);}
+.sr-warn{background:rgba(234,179,8,.15);color:var(--yellow);border:1px solid rgba(234,179,8,.3);}
+
+/* ── SPECIAL ORDER ── */
+.special-card{background:rgba(168,85,247,.06);border:1px solid rgba(168,85,247,.2);border-radius:13px;padding:16px;margin-top:16px;}
+.special-title{font-size:13px;font-weight:700;color:#c084fc;margin-bottom:3px;}
+.special-sub{font-size:11px;color:var(--muted);margin-bottom:11px;}
+.special-row{display:flex;gap:7px;align-items:flex-start;}
+.special-row input,.special-row select{flex:1;padding:8px 11px;background:var(--bg);border:1px solid var(--border);border-radius:9px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;}
+.special-row input:focus,.special-row select:focus{border-color:var(--purple);}
+.sbtn{padding:8px 14px;background:rgba(168,85,247,.15);border:1px solid rgba(168,85,247,.3);border-radius:9px;color:#c084fc;font-family:'Syne',sans-serif;font-weight:700;font-size:12px;cursor:pointer;transition:all .2s;white-space:nowrap;}
+.sbtn:hover{background:var(--purple);color:#fff;}
+.pend-item{display:flex;align-items:center;justify-content:space-between;padding:8px 11px;background:var(--surface2);border-radius:9px;margin-top:6px;font-size:12px;}
+.ptag{padding:2px 7px;border-radius:6px;font-size:10px;font-weight:700;}
+.pt-wait{background:rgba(234,179,8,.15);color:var(--yellow);}
+.pt-ok{background:rgba(34,197,94,.15);color:var(--green);}
+.pt-no{background:rgba(239,68,68,.15);color:var(--red);}
+
+/* ── PROFILE ── */
+.p-avatar{width:64px;height:64px;background:linear-gradient(135deg,var(--accent),#dc2626);border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:800;font-family:'Syne',sans-serif;}
+.p-tag{display:inline-block;padding:3px 10px;border-radius:7px;font-size:11px;background:rgba(249,115,22,.1);color:var(--accent);border:1px solid rgba(249,115,22,.2);margin-top:4px;}
+
+/* ── MODAL ── */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:300;align-items:center;justify-content:center;backdrop-filter:blur(4px);}
+.modal-overlay.open{display:flex;animation:fadeIn .2s ease;}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.modal-box{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:26px;width:420px;position:relative;}
+.modal-close{position:absolute;top:13px;right:13px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:4px 8px;cursor:pointer;color:var(--muted);font-size:12px;}
+.modal-title{font-size:17px;font-weight:800;margin-bottom:2px;}
+.modal-sub{color:var(--muted);font-size:12px;margin-bottom:16px;}
+
+/* ── MISC ── */
+.sm-btn{padding:5px 11px;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;border:none;font-family:'DM Sans',sans-serif;transition:all .2s;}
+.sm-success{background:rgba(34,197,94,.15);color:var(--green);border:1px solid rgba(34,197,94,.2);}
+.sm-success:hover{background:var(--green);color:#fff;}
+.sm-danger{background:rgba(239,68,68,.15);color:var(--red);border:1px solid rgba(239,68,68,.2);}
+.sm-danger:hover{background:var(--red);color:#fff;}
+.loading-txt{color:var(--muted);font-size:13px;padding:16px 0;}
+.status-msg{font-size:13px;padding:9px 13px;border-radius:9px;margin-top:10px;display:none;}
+.sm-ok{background:rgba(34,197,94,.1);color:var(--green);border:1px solid rgba(34,197,94,.2);}
+.sm-err{background:rgba(239,68,68,.1);color:var(--red);border:1px solid rgba(239,68,68,.2);}
+</style>
+</head>
+<body>
+
+<!-- HOSTEL SELECTION -->
+<div class="auth-screen" id="hostelScreen">
+  <div style="text-align:center;max-width:520px;width:100%;padding:20px;">
+    <div style="font-family:'Syne',sans-serif;font-size:32px;font-weight:800;margin-bottom:6px;">Mess<span style="color:var(--accent);">Mate</span></div>
+    <div style="color:var(--muted);font-size:13px;margin-bottom:44px;">Digital Hostel Mess Management System</div>
+    <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:700;margin-bottom:5px;">Select Your Hostel</div>
+    <div style="color:var(--muted);font-size:13px;margin-bottom:28px;">Data is completely separate per hostel</div>
+    <div style="display:flex;gap:20px;justify-content:center;flex-wrap:wrap;">
+      <div class="hostel-card" id="boysCard" onclick="selectHostel('boys')">
+        <span class="hostel-icon">🏢</span>
+        <div class="hostel-label">Boys Hostel</div>
+        <div class="hostel-count" id="boysCount">— students</div>
+        <div class="hostel-btn boys-btn">Select →</div>
+      </div>
+      <div class="hostel-card" id="girlsCard" onclick="selectHostel('girls')">
+        <span class="hostel-icon">🏠</span>
+        <div class="hostel-label">Girls Hostel</div>
+        <div class="hostel-count" id="girlsCount">— students</div>
+        <div class="hostel-btn girls-btn">Select →</div>
+      </div>
+    </div>
+    <div style="margin-top:40px;color:var(--muted);font-size:12px;">
+      Admin & Staff? &nbsp;<span style="color:var(--accent);cursor:pointer;font-weight:600;" onclick="showAdminLogin()">Login here →</span>
+    </div>
+  </div>
+</div>
+
+<!-- AUTH SCREEN -->
+<div class="auth-screen hidden" id="authScreen">
+  <div class="auth-box">
+    <div class="auth-logo">Mess<span>Mate</span></div>
+    <div class="auth-sub">Digital Hostel Mess Management System</div>
+    <div id="hostelChip" style="margin-bottom:14px;"></div>
+
+    <div style="margin-bottom:14px;">
+      <div style="font-size:10px;color:var(--muted);margin-bottom:6px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;">Login as</div>
+      <div class="role-select">
+        <div class="role-opt active" onclick="selectRole(this,'student')" data-role="student"><span class="ricon">🎓</span>Student</div>
+        <div class="role-opt" onclick="selectRole(this,'staff')" data-role="staff"><span class="ricon">👨🍳</span>Staff</div>
+        <div class="role-opt" onclick="selectRole(this,'admin')" data-role="admin"><span class="ricon">🛡️</span>Admin</div>
+      </div>
+    </div>
+
+    <div class="tab-row" id="authTabRow">
+      <button class="tab-btn active" onclick="switchTab('login')">Login</button>
+      <button class="tab-btn" onclick="switchTab('signup')">Sign Up</button>
+    </div>
+
+    <!-- LOGIN -->
+    <div id="loginForm">
+      <div id="stdLoginF">
+        <div class="field">
+          <label>Student ID <span class="req">*</span></label>
+          <input type="text" id="lStudentId" placeholder="EN or DSE + 8 digits" oninput="this.value=this.value.toUpperCase()"/>
+          <div class="err" id="lIdErr">ID must start with EN or DSE followed by 8 digits</div>
+        </div>
+      </div>
+      <div id="staffLoginF" class="hidden">
+        <div class="info-box blue">ℹ️ Your Staff ID is provided by your hostel Admin</div>
+        <div class="field"><label>Staff ID <span class="req">*</span></label><input type="text" id="lStaffId" placeholder="e.g. STAFF001" oninput="this.value=this.value.toUpperCase()"/></div>
+      </div>
+      <div id="adminLoginF" class="hidden">
+        <div class="info-box orange">🛡️ Separate admin accounts for Boys & Girls hostel</div>
+        <div class="field"><label>Admin Username <span class="req">*</span></label><input type="text" id="lAdminUser" placeholder="boysadmin or girlsadmin"/></div>
+      </div>
+      <div class="field"><label>Password <span class="req">*</span></label><input type="password" id="lPass" placeholder="••••••••"/></div>
+      <div class="global-err" id="loginErr"></div>
+      <button class="btn" id="loginBtn" onclick="doLogin()">Login →</button>
+    </div>
+
+    <!-- SIGNUP — Students only -->
+    <div id="signupForm" class="hidden">
+      <div class="field">
+        <label>Full Name <span class="req">*</span></label>
+        <div class="name-row">
+          <div><input type="text" id="sFirst" placeholder="First"/><div class="err" id="sFirstErr">Required</div></div>
+          <div><input type="text" id="sMiddle" placeholder="Middle"/></div>
+          <div><input type="text" id="sLast" placeholder="Last"/><div class="err" id="sLastErr">Required</div></div>
+        </div>
+      </div>
+      <div class="field">
+        <label>Student ID <span class="req">*</span></label>
+        <input type="text" id="sStudentId" placeholder="EN or DSE + 8 digits" oninput="this.value=this.value.toUpperCase()"/>
+        <div class="err" id="sIdErr">Must start with EN or DSE followed by 8 digits</div>
+      </div>
+      <div class="two-col">
+        <div class="field">
+          <label>Department <span class="req">*</span></label>
+          <select id="sDept">
+            <option value="">Select</option>
+            <option>CS(AIML) Engineering</option>
+            <option>Computer Engineering</option>
+            <option>ENTC Engineering</option>
+            <option>Mechanical Engineering</option>
+            <option>Civil Engineering</option>
+          </select>
+          <div class="err" id="sDeptErr">Required</div>
+        </div>
+        <div class="field">
+          <label>Room Number <span class="req">*</span></label>
+          <input type="text" id="sRoom" placeholder="e.g. A-204"/>
+          <div class="err" id="sRoomErr">Required</div>
+        </div>
+      </div>
+      <div class="field">
+        <label>Password <span class="req">*</span> (min 6 chars)</label>
+        <input type="password" id="sPass" placeholder="••••••••"/>
+        <div class="err" id="sPassErr">Minimum 6 characters</div>
+      </div>
+      <div class="global-err" id="signupErr"></div>
+      <button class="btn" id="signupBtn" onclick="doSignup()">Create Account →</button>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div class="app hidden" id="mainApp">
+  <div class="sidebar">
+    <div class="sidebar-logo">Mess<span>Mate</span></div>
+    <div class="sidebar-hostel" id="sidebarHostel"></div>
+
+    <div id="studentNav">
+      <div class="nav-item active" onclick="gotoPage('dashboard',this)"><span class="nicon">🏠</span>Dashboard</div>
+      <div class="nav-item" onclick="gotoPage('menu',this)"><span class="nicon">📋</span>Today's Menu</div>
+      <div class="nav-item" onclick="gotoPage('vote',this)"><span class="nicon">🗳️</span>Vote</div>
+      <div class="nav-item" onclick="gotoPage('profile',this)"><span class="nicon">👤</span>Profile & QR</div>
+    </div>
+      <div id="staffNav" class="hidden">
+      <div class="nav-item active" onclick="gotoPage('scanner', this)">
+      <span class="nicon">📷</span>QR Scanner & Orders
+    </div>
+      <div class="nav-item" onclick="gotoPage('todaylog',this)"><span class="nicon">📝</span>Today's Log</div>
+</div>
+    <div id="adminNav" class="hidden">
+      <div class="nav-item active" onclick="gotoPage('admindash',this)"><span class="nicon">📊</span>Dashboard</div>
+      <div class="nav-item" onclick="gotoPage('students',this)"><span class="nicon">👥</span>Students</div>
+      <div class="nav-item" onclick="gotoPage('staffmanage',this)"><span class="nicon">👨🍳</span>Manage Staff</div>
+      <div class="nav-item" onclick="gotoPage('menumanage',this)"><span class="nicon">🍽️</span>Manage Menu</div>
+      <div class="nav-item" onclick="gotoPage('adminspecial',this)"><span class="nicon">⭐</span>Special Orders</div>
+    </div>
+
+    <div class="nav-bottom">
+      <button class="logout-btn" onclick="doLogout()">⬅ Logout</button>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="topbar">
+      <div class="page-title" id="pageTitle">Dashboard</div>
+      <div class="topbar-right">
+        <div class="date-chip" id="dateChip"></div>
+        <div class="notif-btn" onclick="toggleNotif()" id="notifBtn">🔔<div class="notif-badge" id="notifBadge"></div></div>
+        <div class="user-chip"><div class="avatar" id="uAvatar">?</div><span id="uName">User</span></div>
+      </div>
+    </div>
+
+    <!-- NOTIFICATIONS PANEL -->
+    <div class="notif-panel" id="notifPanel">
+      <div class="notif-head"><h4>Notifications</h4><button class="mark-all" onclick="markAllRead()">Mark all read</button></div>
+      <div id="notifList"><div class="notif-empty">No notifications yet.</div></div>
+    </div>
+
+    <!-- ═══ STUDENT DASHBOARD ═══ -->
+    <div id="page-dashboard">
+      <div class="grid3" style="max-width:720px;">
+        <div class="card stat-card sc-orange">
+          <div class="stat-label">Credits Left</div>
+          <div class="stat-value sv-orange" id="creditDisplay">—</div>
+          <div class="stat-sub" id="creditLabel">of 30 this month</div>
+        </div>
+        <div class="card stat-card sc-blue">
+          <div class="stat-label">Today's Vote</div>
+          <div class="stat-value sv-blue" style="font-size:20px;" id="voteDisplay">Not set</div>
+          <div class="stat-sub">eating today?</div>
+        </div>
+        <div class="card stat-card sc-purple">
+          <div class="stat-label">Special Bill</div>
+          <div class="stat-value sv-purple" id="billDisplay">₹0</div>
+          <div class="stat-sub">total payable this month</div>
+        </div>
+      </div>
+
+      <div class="grid2">
+        <!-- LEFT: QR + Special Request -->
+        <div>
+          <div class="card" style="margin-bottom:16px;">
+            <div class="section-title">🪪 Your QR Code</div>
+            <div style="display:flex;gap:16px;align-items:center;">
+              <div class="qr-wrap" style="width:120px;height:120px;flex-shrink:0;" id="dashQr">
+                <div style="color:var(--muted);font-size:11px;">Loading...</div>
+              </div>
+              <div style="flex:1;">
+                <div style="font-size:15px;font-weight:700;margin-bottom:2px;" id="qrName">—</div>
+                <div style="color:var(--muted);font-size:12px;margin-bottom:3px;" id="qrRoom">—</div>
+                <div style="font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:var(--accent);margin-bottom:10px;" id="qrIdShow">—</div>
+                <div class="cbar-wrap">
+                  <div class="cbar-labels"><span>Credits</span><span id="creditLabel">—</span></div>
+                  <div class="cbar"><div class="cbar-fill" id="creditFill" style="width:0%"></div></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Special Request -->
+            <div class="special-card">
+              <div class="special-title">⭐ Request Special Item</div>
+              <div class="special-sub">Admin will approve and set the cost. Tell us when you want it.</div>
+              <div class="special-row" style="margin-bottom:7px;">
+                <input type="text" id="spItemName" placeholder="Item name (e.g. Egg Bhurji)"/>
+                <select id="spMealTime">
+                  <option value="breakfast">Breakfast</option>
+                  <option value="lunch">Lunch</option>
+                  <option value="dinner">Dinner</option>
+                  <option value="anytime">Anytime</option>
+                </select>
+              </div>
+              <button class="sbtn" onclick="submitSpecial()" style="width:100%;">Submit Request →</button>
+              <div id="myOrdersList" style="margin-top:10px;"></div>
+            </div>
+          </div>
+          <button class="sbtn" id="markAttendanceBtn" style="display:none;width:100%;margin-top:10px;" onclick="markAttendance()">📷 Mark Attendance</button>
+        </div>
+
+        <!-- RIGHT: Today's Menu + Credit History -->
+        
+      </div>
+    </div>
+
+    <!-- ═══ MENU PAGE ═══ -->
+    <div id="page-menu" class="hidden">
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;" id="menuGrid">
+        <div class="loading-txt" style="grid-column:span 3;">Loading today's menu...</div>
+      </div>
+    </div>
+
+    <!-- ═══ VOTE PAGE ═══ -->
+    <div id="page-vote" class="hidden">
+      <div class="card" style="max-width:500px;margin:0 auto;">
+        <div class="vote-wrap">
+          <h3 style="font-size:19px;margin-bottom:6px;">Will you eat today?</h3>
+          <p style="color:var(--muted);font-size:13px;margin-bottom:22px;">Help reduce food waste — let the mess know!</p>
+          <div class="vote-btns">
+            <button class="vbtn vbtn-yes" id="vYes" onclick="castVote('yes')">✅ Yes, I'm eating</button>
+            <button class="vbtn vbtn-no" id="vNo" onclick="castVote('no')">❌ Skipping today</button>
+          </div>
+          <div class="vote-stats">
+            <div style="text-align:center;"><div class="vs-num sv-green" id="yesCount">—</div><div class="vs-label">Eating</div></div>
+            <div style="text-align:center;"><div class="vs-num sv-orange" id="noCount">—</div><div class="vs-label">Skipping</div></div>
+            <div style="text-align:center;"><div class="vs-num" style="color:var(--muted);" id="pendCount">—</div><div class="vs-label">Not voted</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ PROFILE PAGE ═══ -->
+    <div id="page-profile" class="hidden">
+      <div class="grid2">
+        <div class="card">
+          <div style="display:flex;align-items:center;gap:16px;margin-bottom:20px;">
+            <div class="p-avatar" id="pAvatar">?</div>
+            <div>
+              <div style="font-size:19px;font-weight:800;" id="pName">—</div>
+              <div style="color:var(--muted);font-size:12px;" id="pIdDisplay">—</div>
+              <div class="p-tag">🎓 Student</div>
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+            <div class="card" style="padding:13px;background:var(--surface2);"><div class="stat-label">Department</div><div style="font-size:13px;font-weight:600;margin-top:2px;" id="pDept">—</div></div>
+            <div class="card" style="padding:13px;background:var(--surface2);"><div class="stat-label">Room</div><div style="font-size:17px;font-weight:700;" id="pRoom">—</div></div>
+            <div class="card" style="padding:13px;background:var(--surface2);"><div class="stat-label">Credits</div><div style="font-size:17px;font-weight:700;color:var(--accent);" id="pCredits">—</div></div>
+            <div class="card" style="padding:13px;background:var(--surface2);"><div class="stat-label">Special Bill</div><div style="font-size:17px;font-weight:700;color:var(--purple);" id="pBill">₹0</div></div>
+          </div>
+        </div>
+        <div class="card" style="display:flex;flex-direction:column;align-items:center;gap:13px;">
+          <div class="section-title">Your Unique QR Code</div>
+          <div class="qr-wrap" style="width:190px;height:190px;" id="profileQr"></div>
+          <p style="color:var(--muted);font-size:12px;text-align:center;">Show this QR to mess staff — it encodes your unique Student ID</p>
+          <div style="background:var(--surface2);border:1px solid var(--border);border-radius:9px;padding:9px 14px;text-align:center;">
+            <div style="font-size:10px;color:var(--muted);margin-bottom:2px;">YOUR STUDENT ID (encoded in QR)</div>
+            <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:16px;color:var(--accent);" id="pQrId">—</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ SCANNER PAGE (Staff) ═══ -->
+<div id="page-scanner" class="hidden">
+  <div class="grid2" style="max-width:740px;">
+
+    <!-- LEFT: Camera Scanner -->
+    <div class="card">
+      <div style="display:flex;flex-direction:column;align-items:center;">
+        <div class="section-title">📷 QR Scanner</div>
+
+        <!-- Camera feed renders here -->
+        <div id="qr-reader" style="width:260px;border-radius:16px;overflow:hidden;border:3px solid var(--accent);"></div>
+
+        <!-- Status below camera -->
+        <div id="scanStatus" style="margin-top:12px;width:260px;font-size:13px;color:var(--muted);text-align:center;">
+          📷 Camera starting...
+        </div>
+
+        <!-- Manual fallback -->
+        <div style="width:260px;margin-top:14px;">
+          <div style="font-size:11px;color:var(--muted);text-align:center;margin-bottom:7px;">— or enter manually —</div>
+          <div style="display:flex;gap:7px;">
+            <input type="text" id="scanInput" placeholder="Student ID"
+              oninput="this.value=this.value.toUpperCase()"
+              onkeydown="if(event.key==='Enter')doManualScan()"
+              style="flex:1;padding:9px 11px;background:var(--bg);border:1px solid var(--border);border-radius:9px;color:var(--text);font-size:13px;outline:none;"/>
+            <button onclick="doManualScan()"
+              style="padding:9px 13px;background:var(--accent);border:none;border-radius:9px;color:#fff;font-family:'Syne',sans-serif;font-weight:700;font-size:13px;cursor:pointer;">Go</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- RIGHT: Add Special Order -->
+    <div class="card">
+      <div class="section-title">⭐ Add Special Order</div>
+      <p style="color:var(--muted);font-size:12px;margin-bottom:14px;">Scan a student first, then record their special order.</p>
+      <div class="field">
+        <label>Student (last scanned)</label>
+        <input type="text" id="spStaffStudent" readonly placeholder="Scan a student first..."
+          style="width:100%;padding:9px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:9px;color:var(--muted);font-size:13px;"/>
+      </div>
+      <div class="field">
+        <label>Special Item</label>
+        <input type="text" id="spStaffItem" placeholder="e.g. Egg Bhurji"
+          style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--border);border-radius:9px;color:var(--text);font-size:13px;outline:none;"/>
+      </div>
+      <div class="field">
+        <label>Meal Time</label>
+        <select id="spStaffTime"
+          style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--border);border-radius:9px;color:var(--text);font-size:13px;outline:none;">
+          <option value="breakfast">Breakfast</option>
+          <option value="lunch">Lunch</option>
+          <option value="dinner">Dinner</option>
+          <option value="anytime">Anytime</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Cost (₹)</label>
+        <input type="number" id="spStaffCost" min="0" step="0.5" placeholder="e.g. 30"
+          style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--border);border-radius:9px;color:var(--text);font-size:13px;outline:none;"/>
+      </div>
+      <button class="btn"
+        style="background:rgba(168,85,247,.15);color:#c084fc;border:1px solid rgba(168,85,247,.3);margin-top:0;"
+        onclick="staffAddSpecial()">⭐ Submit Special Order</button>
+      <div id="spStaffResult" style="margin-top:8px;font-size:13px;"></div>
+    </div>
+
+  </div>
+</div>
+    <!-- ═══ STAFF SPECIAL ORDERS ═══ -->
+    <div id="page-staffspecial" class="hidden">
+      <div class="card">
+        <div class="section-title">⭐ Approved Special Orders for Today</div>
+        <p style="color:var(--muted);font-size:12px;margin-bottom:14px;">These orders have been approved by admin. Prepare them for the students at the specified meal time.</p>
+        <table>
+          <thead><tr><th>Student</th><th>Room</th><th>Item</th><th>Meal Time</th><th>Cost</th><th>Status</th></tr></thead>
+          <tbody id="staffSpecialTbl"><tr><td colspan="6" class="tbl-empty">Loading...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ═══ TODAY LOG (Staff) ═══ -->
+    <div id="page-todaylog" class="hidden">
+      <div style="margin-bottom:16px;display:flex;gap:12px;align-items:center;justify-content:space-between;">
+        <div style="display:flex;gap:10px;align-items:center;">
+          <label style="font-size:14px;font-weight:600;">Select Date:</label>
+          <input type="date" id="logDate" onchange="loadTodaysLog()" style="padding:8px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text);">
+        </div>
+        <button class="btn" style="width:auto;padding:8px 16px;font-size:12px;" onclick="loadTodaysLog()">🔄 Refresh Log</button>
+      </div>
+      <div class="grid3" style="margin-bottom:20px;">
+        <div class="card stat-card sc-orange">
+          <div class="stat-label">Students Marked</div>
+          <div class="stat-value sv-orange" id="logStudents">0</div>
+          <div class="stat-sub">attended today</div>
+        </div>
+        <div class="card stat-card sc-red">
+          <div class="stat-label">Credits Deducted</div>
+          <div class="stat-value sv-red" id="logCredits">0</div>
+          <div class="stat-sub">total credits used</div>
+        </div>
+        <div class="card stat-card sc-blue">
+          <div class="stat-label">Last Scan</div>
+          <div class="stat-value sv-blue" style="font-size:18px;" id="logLast">—</div>
+          <div class="stat-sub">most recent</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="section-title">📝 Today's Attendance Log</div>
+        <table>
+          <thead><tr><th>Name</th><th>Room</th><th>Time</th><th>Credits Left</th><th>Status</th></tr></thead>
+          <tbody id="logTbl"><tr><td colspan="5" class="tbl-empty">No scans yet today.</td></tr></tbody>
+        </table>
+      </div>
+      <div class="card" style="margin-top:16px;">
+        <div class="section-title">⭐ Today's Special Orders</div>
+        <p style="color:var(--muted);font-size:12px;margin-bottom:8px;">Orders placed today via staff scanner or admin-approved requests.</p>
+        <table>
+          <thead><tr><th>Student</th><th>Room</th><th>Item</th><th>Meal</th><th>Cost</th><th>Status</th></tr></thead>
+          <tbody id="specialLogTbl"><tr><td colspan="6" class="tbl-empty">No special orders found for today.</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ═══ ADMIN DASHBOARD ═══ -->
+    <div id="page-admindash" class="hidden">
+      <div class="grid3">
+        <div class="card stat-card sc-orange"><div class="stat-label">Total Students</div><div class="stat-value sv-orange" id="adStudents">—</div><div class="stat-sub">registered in this hostel</div></div>
+        <div class="card stat-card sc-purple"><div class="stat-label">Pending Special Orders</div><div class="stat-value sv-purple" id="adPending">—</div><div class="stat-sub">awaiting your approval</div></div>
+        <div class="card stat-card sc-blue"><div class="stat-label">Total Staff</div><div class="stat-value sv-blue" id="adStaff">—</div><div class="stat-sub">in this hostel</div></div>
+      </div>
+      <div class="card">
+        <div class="section-title">⭐ Pending Special Orders — Set Cost & Approve</div>
+        <p style="color:var(--muted);font-size:12px;margin-bottom:14px;">Enter the cost for each order before approving. Approved orders will appear in staff dashboard.</p>
+        <table>
+          <thead><tr><th>Student</th><th>Room</th><th>Item</th><th>Meal Time</th><th>Date</th><th>Set Cost (₹)</th><th>Action</th></tr></thead>
+          <tbody id="adPendingTbl"><tr><td colspan="7" class="tbl-empty">No pending orders.</td></tr></tbody>
+        </table>
+      </div>
+      <div class="card">
+        <div class="section-title">💰 Monthly Credit Management</div>
+        <p style="color:var(--muted);font-size:12px;margin-bottom:14px;">Select month and reset all students' credits to the number of days in that month.</p>
+        <div style="display:flex;gap:10px;align-items:center;">
+          <input type="month" id="creditMonth" style="padding:8px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text);">
+          <button class="btn" style="width:auto;padding:8px 16px;" onclick="setMonthlyCredits()">Reset Credits</button>
+        </div>
+        <div id="creditStatus" style="margin-top:10px;font-size:12px;"></div>
+      </div>
+      <div class="grid3" style="margin-top:16px;">
+        <div class="card stat-card sc-green"><div class="stat-label">Yes, Eating Today</div><div class="stat-value sv-green" id="adVoteYes">—</div><div class="stat-sub">students voting yes</div></div>
+        <div class="card stat-card sc-red"><div class="stat-label">Skipping Today</div><div class="stat-value sv-red" id="adVoteNo">—</div><div class="stat-sub">students voting no</div></div>
+        <div class="card stat-card sc-blue"><div class="stat-label">No Vote</div><div class="stat-value sv-blue" id="adVoteAbstain">—</div><div class="stat-sub">haven't voted yet</div></div>
+      </div>
+    </div>
+
+    <!-- ═══ STUDENTS PAGE (Admin) ═══ -->
+    <div id="page-students" class="hidden">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+        <div style="font-size:17px;font-weight:700;">👥 All Students — <span id="hostelLabel" style="color:var(--accent);"></span></div>
+        <button class="btn" style="width:auto;padding:9px 18px;font-size:12px;" onclick="resetAllCredits()">🔄 Reset All Credits to 30</button>
+      </div>
+      <div class="card">
+        <table>
+          <thead><tr><th>Name</th><th>Student ID</th><th>Room</th><th>Dept</th><th>Credits</th><th>Special Bill</th><th>Status</th></tr></thead>
+          <tbody id="studentsTbl"><tr><td colspan="7" class="tbl-empty">Loading...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ═══ STAFF MANAGE (Admin) ═══ -->
+    <div id="page-staffmanage" class="hidden">
+      <div class="grid2">
+        <div class="card">
+          <div class="section-title">👨🍳 Staff Accounts</div>
+          <table>
+            <thead><tr><th>Staff ID</th><th>Name</th><th>Joined</th><th>Action</th></tr></thead>
+            <tbody id="staffTbl"><tr><td colspan="4" class="tbl-empty">Loading...</td></tr></tbody>
+          </table>
+        </div>
+        <div class="card">
+          <div class="section-title">➕ Add New Staff Member</div>
+          <div class="info-box green">✅ Staff you add here will belong to <strong id="staffHostelLabel"></strong> and can only scan students from this hostel.</div>
+          <div class="field"><label>Full Name <span class="req">*</span></label><input type="text" id="nStaffName" placeholder="Staff Full Name"/></div>
+          <div class="field"><label>Staff ID <span class="req">*</span></label><input type="text" id="nStaffId" placeholder="e.g. STAFF003" oninput="this.value=this.value.toUpperCase()"/></div>
+          <div class="field"><label>Password <span class="req">*</span></label><input type="password" id="nStaffPass" placeholder="Set a password"/></div>
+          <button class="btn" id="addStaffBtn" onclick="addStaff()" style="margin-top:4px;">Create Staff Account →</button>
+          <div class="status-msg" id="staffMsg"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ MENU MANAGE (Admin) ═══ -->
+    <div id="page-menumanage" class="hidden">
+      <div class="card" style="max-width:560px;">
+        <div class="section-title">🍽️ Set Today's Menu</div>
+        <div class="info-box blue">📋 Menu you set here is only visible to <span id="menuHostelLabel" style="font-weight:700;"></span> students.</div>
+        <div class="field"><label>Breakfast Items <span class="req">*</span> (comma separated)</label><input type="text" id="bfInput" placeholder="e.g. Poha, Boiled Eggs, Tea, Banana"/></div>
+        <div class="field"><label>Lunch Items <span class="req">*</span> (comma separated)</label><input type="text" id="lunchInput" placeholder="e.g. Dal, Jeera Rice, Roti, Salad"/></div>
+        <div class="field"><label>Dinner Items <span class="req">*</span> (comma separated)</label><input type="text" id="dinnerInput" placeholder="e.g. Paneer, Naan, Fried Rice, Kheer"/></div>
+        <button class="btn" onclick="saveMenu()">💾 Save Today's Menu →</button>
+        <div class="status-msg" id="menuMsg"></div>
+      </div>
+    </div>
+
+    <!-- ═══ ADMIN ALL SPECIAL ORDERS ═══ -->
+    <div id="page-adminspecial" class="hidden">
+  <!-- Billing summary -->
+  <div class="grid3" style="margin-bottom:18px;">
+    <div class="card stat-card sc-purple">
+      <div class="stat-label">Total Confirmed Orders</div>
+      <div class="stat-value sv-purple" id="asTotal">—</div>
+      <div class="stat-sub">approved + staff added</div>
+    </div>
+    <div class="card stat-card sc-orange">
+      <div class="stat-label">Total Billing</div>
+      <div class="stat-value sv-orange" style="font-size:26px;" id="asTotalBill">—</div>
+      <div class="stat-sub">all time</div>
+    </div>
+    <div class="card stat-card sc-green">
+      <div class="stat-label">Today's Billing</div>
+      <div class="stat-value sv-green" style="font-size:26px;" id="asTodayBill">—</div>
+      <div class="stat-sub">today only</div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="section-title">⭐ All Special Orders — Billing Reference</div>
+    <table>
+      <thead>
+        <tr>
+          <th>Student</th><th>Room</th><th>Item</th>
+          <th>Meal Time</th><th>Cost</th><th>Date</th><th>Status</th>
+        </tr>
+      </thead>
+      <tbody id="adAllSpecialTbl">
+        <tr><td colspan="7" class="tbl-empty">Loading...</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+  </div><!-- end .main -->
+</div><!-- end .app -->
+
+<!-- CONFIRM SPECIAL ORDER MODAL -->
+<div class="modal-overlay" id="specialModal">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <div class="modal-title">⭐ Confirm Special Request</div>
+    <div class="modal-sub">Review your request before submitting to admin.</div>
+    <div id="modalBody"></div>
+    <button class="btn" style="margin-top:14px;" onclick="confirmSpecial()">Submit Request →</button>
+  </div>
+</div>
+
+<!-- SCAN CONFIRM POPUP -->
+<div class="modal-overlay" id="scanModal">
+  <div class="modal-box" style="max-width:360px;text-align:center;">
+    <div style="font-size:48px;margin-bottom:12px;" id="scanModalIcon">✅</div>
+    <div class="modal-title" id="scanModalTitle">Student Found</div>
+    <div class="modal-sub" id="scanModalSub">Review details below</div>
+
+    <div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:16px;margin:14px 0;text-align:left;">
+      <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
+        <span style="color:var(--muted);font-size:12px;">Student Name</span>
+        <span style="font-weight:700;font-size:14px;" id="smName">—</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
+        <span style="color:var(--muted);font-size:12px;">Student ID</span>
+        <span style="font-weight:700;font-size:13px;color:var(--accent);" id="smId">—</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
+        <span style="color:var(--muted);font-size:12px;">Room</span>
+        <span style="font-weight:700;" id="smRoom">—</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;">
+        <span style="color:var(--muted);font-size:12px;">Credits Left</span>
+        <span style="font-weight:800;font-size:16px;color:var(--accent);" id="smCredits">—</span>
+      </div>
+    </div>
+
+    <div id="smStatusBox" style="padding:10px;border-radius:10px;margin-bottom:14px;font-size:13px;font-weight:600;"></div>
+
+    <div style="display:flex;gap:10px;">
+      <button id="smConfirmBtn" onclick="confirmScan()"
+        style="flex:1;padding:12px;background:var(--green);border:none;border-radius:11px;color:#fff;font-family:'Syne',sans-serif;font-weight:700;font-size:14px;cursor:pointer;">
+        ✅ Mark Attendance
+      </button>
+      <button onclick="cancelScan()"
+        style="flex:1;padding:12px;background:var(--surface2);border:1px solid var(--border);border-radius:11px;color:var(--muted);font-family:'Syne',sans-serif;font-weight:700;font-size:14px;cursor:pointer;">
+        Cancel
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+const API = 'http://localhost:5000/api';
+let G = { token:null, user:null, hostel:'boys', role:'student', qrDone:false, lastScanned:null };
+
+// ── SESSION ──
+function saveSession(tok, user) {
+  G.token = tok; G.user = user;
+  localStorage.setItem('mm_tok', tok);
+  localStorage.setItem('mm_usr', JSON.stringify(user));
+}
+function loadSession() {
+  const t = localStorage.getItem('mm_tok'), u = localStorage.getItem('mm_usr');
+  if(t && u) { G.token = t; G.user = JSON.parse(u); return true; }
+  return false;
+}
+function clearSession() {
+  G.token = null; G.user = null; G.qrDone = false;
+  localStorage.removeItem('mm_tok'); localStorage.removeItem('mm_usr');
+}
+
+// ── UTILS ──
+const $ = id => document.getElementById(id);
+const validId = id => /^(EN|DSE)\d{8}$/.test(id);
+function showErr(id, msg) { const e=$( id); if(e){if(msg)e.textContent=msg; e.style.display='block';} }
+function hideErr(id) { const e=$(id); if(e) e.style.display='none'; }
+function showGErr(id, msg) { const e=$(id); if(e){e.textContent=msg; e.style.display='block';} }
+function hideGErr(id) { const e=$(id); if(e) e.style.display='none'; }
+function showStatus(id, msg, ok) {
+  const e=$(id); if(!e) return;
+  e.textContent = msg;
+  e.className = 'status-msg ' + (ok ? 'sm-ok' : 'sm-err');
+  e.style.display = 'block';
+  setTimeout(() => e.style.display='none', 5000);
+}
+function addNotif(msg) {
+  const list = $('notifList');
+  const empty = list.querySelector('.notif-empty');
+  if(empty) empty.remove();
+  const d = document.createElement('div');
+  d.className = 'notif-item unread';
+  d.onclick = function(){ this.classList.remove('unread'); this.querySelector('.ndot').classList.add('read'); updateBadge(); };
+  d.innerHTML = `<div class="ndot"></div><div><div class="nmsg">${msg}</div><div class="ntime">Just now</div></div>`;
+  list.prepend(d);
+  updateBadge();
+}
+function updateBadge() {
+  const n = document.querySelectorAll('.notif-item.unread').length;
+  const b = $('notifBadge'); b.textContent = n; b.style.display = n ? 'flex' : 'none';
+}
+
+// ── HOSTEL SELECTION ──
+async function loadCounts() {
+  try {
+    const r = await fetch(`${API}/student/counts`);
+    if(r.ok) { const d = await r.json(); $('boysCount').textContent=`${d.boys||0} students`; $('girlsCount').textContent=`${d.girls||0} students`; }
+  } catch(e) { $('boysCount').textContent='Boys Hostel'; $('girlsCount').textContent='Girls Hostel'; }
+}
+function selectHostel(h) {
+  G.hostel = h;
+  $('hostelScreen').classList.add('hidden');
+  $('authScreen').classList.remove('hidden');
+  const isG = h === 'girls';
+  $('hostelChip').innerHTML = `<span class="hostel-chip ${h}">${isG?'🏠 Girls':'🏢 Boys'} Hostel &nbsp;•&nbsp;<span style="cursor:pointer;text-decoration:underline;" onclick="goBack()">Change</span></span>`;
+  selectRole(document.querySelector('[data-role="student"]'), 'student');
+}
+function showAdminLogin() {
+  G.hostel = 'boys'; // default, admin will pick
+  $('hostelScreen').classList.add('hidden');
+  $('authScreen').classList.remove('hidden');
+  $('hostelChip').innerHTML = `<span class="hostel-chip boys">🛡️ Admin / Staff Login — select hostel below</span>`;
+  // Show hostel selector for admin
+  $('hostelChip').innerHTML += `<div style="display:flex;gap:8px;margin-top:8px;">
+    <button onclick="G.hostel='boys';this.style.background='var(--blue)';this.style.color='#fff';document.getElementById('girlsAdminBtn').style.background='';document.getElementById('girlsAdminBtn').style.color='';" 
+      id="boysAdminBtn" style="padding:5px 14px;border-radius:8px;border:1px solid var(--blue);background:var(--blue);color:#fff;cursor:pointer;font-size:12px;font-weight:600;">🏢 Boys</button>
+    <button onclick="G.hostel='girls';this.style.background='var(--pink)';this.style.color='#fff';document.getElementById('boysAdminBtn').style.background='';document.getElementById('boysAdminBtn').style.color='';"
+      id="girlsAdminBtn" style="padding:5px 14px;border-radius:8px;border:1px solid var(--pink);cursor:pointer;font-size:12px;font-weight:600;color:var(--pink);">🏠 Girls</button>
+  </div>`;
+  selectRole(document.querySelector('[data-role="admin"]'), 'admin');
+  $('authTabRow').style.display = 'none';
+}
+function goBack() { $('authScreen').classList.add('hidden'); $('hostelScreen').classList.remove('hidden'); }
+
+// ── AUTH ──
+let currentRole = 'student';
+function selectRole(el, role) {
+  document.querySelectorAll('.role-opt').forEach(r => r.classList.remove('active'));
+  el && el.classList.add('active');
+  currentRole = role;
+  $('authTabRow').style.display = role === 'student' ? 'flex' : 'none';
+  $('loginForm').classList.remove('hidden'); $('signupForm').classList.add('hidden');
+  document.querySelectorAll('.tab-btn').forEach((b,i) => b.classList.toggle('active', i===0));
+  $('stdLoginF').classList.toggle('hidden', role !== 'student');
+  $('staffLoginF').classList.toggle('hidden', role !== 'staff');
+  $('adminLoginF').classList.toggle('hidden', role !== 'admin');
+  hideGErr('loginErr');
+}
+function switchTab(t) {
+  document.querySelectorAll('.tab-btn').forEach((b,i) => b.classList.toggle('active', (t==='login'&&i===0)||(t==='signup'&&i===1)));
+  $('loginForm').classList.toggle('hidden', t !== 'login');
+  $('signupForm').classList.toggle('hidden', t !== 'signup');
+}
+
+async function doSignup() {
+  const first=$('sFirst').value.trim(), mid=$('sMiddle').value.trim(), last=$('sLast').value.trim();
+  const sid=$('sStudentId').value.trim(), dept=$('sDept').value, room=$('sRoom').value.trim(), pass=$('sPass').value;
+  ['sFirstErr','sLastErr','sIdErr','sDeptErr','sRoomErr','sPassErr'].forEach(hideErr);
+  hideGErr('signupErr');
+  let ok = true;
+  if(!first){showErr('sFirstErr'); ok=false;}
+  if(!last){showErr('sLastErr'); ok=false;}
+  if(!validId(sid)){showErr('sIdErr'); ok=false;}
+  if(!dept){showErr('sDeptErr','Please select department'); ok=false;}
+  if(!room){showErr('sRoomErr'); ok=false;}
+  if(pass.length<6){showErr('sPassErr'); ok=false;}
+  if(!ok) return;
+
+  const btn=$('signupBtn'); btn.disabled=true; btn.textContent='Creating...';
+  try {
+    const r = await fetch(`${API}/auth/signup`, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({firstName:first, middleName:mid, lastName:last, studentId:sid, password:pass, department:dept, room, hostel:G.hostel})
+    });
+    const d = await r.json();
+    if(!r.ok){showGErr('signupErr', d.message||'Signup failed.'); return;}
+    saveSession(d.token, d.user);
+    launchApp();
+  } catch(e){ showGErr('signupErr','❌ Cannot connect to server. Make sure backend is running on port 5000.'); }
+  finally{ btn.disabled=false; btn.textContent='Create Account →'; }
+}
+
+async function doLogin() {
+  hideGErr('loginErr'); hideErr('lIdErr');
+  const pass = $('lPass').value;
+  let endpoint='', body={};
+
+  if(currentRole === 'student') {
+    const sid = $('lStudentId').value.trim().toUpperCase();
+    if(!validId(sid)){showErr('lIdErr'); return;}
+    if(!pass){showGErr('loginErr','Please enter your password.'); return;}
+    endpoint=`${API}/auth/login/student`; body={studentId:sid, password:pass, hostel:G.hostel};
+  } else if(currentRole === 'staff') {
+    const sfid = $('lStaffId').value.trim().toUpperCase();
+    if(!sfid||!pass){showGErr('loginErr','Please fill all fields.'); return;}
+    endpoint=`${API}/auth/login/staff`; body={staffId:sfid, password:pass};
+  } else {
+    const user = $('lAdminUser').value.trim();
+    if(!user||!pass){showGErr('loginErr','Please fill all fields.'); return;}
+    endpoint=`${API}/auth/login/admin`; body={username:user, password:pass, hostel:G.hostel};
+  }
+
+  const btn=$('loginBtn'); btn.disabled=true; btn.textContent='Logging in...';
+  try {
+    const r = await fetch(endpoint, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)});
+    const d = await r.json();
+    if(!r.ok){showGErr('loginErr', d.message||'Login failed.'); return;}
+    saveSession(d.token, d.user);
+    launchApp();
+  } catch(e){ showGErr('loginErr','❌ Cannot connect to server. Make sure backend is running on port 5000.'); }
+  finally{ btn.disabled=false; btn.textContent='Login →'; }
+}
+
+function openScanner() {
+  // Opens scanner in same tab — back button returns to main app
+  window.location.href = 'scanner.html';
+}
+
+// ── LAUNCH APP ──
+function launchApp() {
+  $('authScreen').classList.add('hidden');
+  $('mainApp').classList.remove('hidden');
+  const r = G.user.role, h = G.user.hostel || G.hostel;
+  G.hostel = h;
+  $('studentNav').classList.toggle('hidden', r!=='student');
+  $('staffNav').classList.toggle('hidden', r!=='staff');
+  $('adminNav').classList.toggle('hidden', r!=='admin');
+
+  const dispName = G.user.firstName || G.user.name || 'User';
+  $('uName').textContent = dispName.split(' ')[0];
+  $('uAvatar').textContent = dispName[0].toUpperCase();
+  $('dateChip').textContent = new Date().toLocaleDateString('en-IN',{weekday:'short',day:'numeric',month:'short'});
+  $('sidebarHostel').textContent = h==='girls'?'🏠 Girls Hostel':h==='boys'?'🏢 Boys Hostel':'🛡️ Admin';
+
+  if(r === 'student') {
+    const full = G.user.name || `${G.user.firstName} ${G.user.lastName}`;
+    $('qrName').textContent = full; $('qrRoom').textContent = `Room ${G.user.room}`;
+    $('qrIdShow').textContent = G.user.studentId;
+    $('pName').textContent = full; $('pIdDisplay').textContent = G.user.studentId;
+    $('pRoom').textContent = G.user.room; $('pDept').textContent = G.user.department||'—';
+    $('pAvatar').textContent = (G.user.firstName||G.user.name||'?')[0].toUpperCase();
+    $('pQrId').textContent = G.user.studentId;
+    updateCredits(G.user.credits);
+    $('pBill').textContent = `₹${G.user.specialBill||0}`;
+    if($('billDisplay')) $('billDisplay').textContent = `₹${G.user.specialBill||0}`;
+    generateQR();
+    G('markAttendanceBtn').style.display='block';
+    loadDashboardMenu();
+    loadMyOrders();
+    loadCreditHistory();
+  }
+  if(r === 'staff') { gotoPage('scanner', document.querySelector('#staffNav .nav-item')); }
+  if(r === 'admin') {
+    const lbl = h==='girls'?'Girls Hostel':'Boys Hostel';
+    if($('hostelLabel')) $('hostelLabel').textContent = lbl;
+    if($('staffHostelLabel')) $('staffHostelLabel').textContent = lbl;
+    if($('menuHostelLabel')) $('menuHostelLabel').textContent = lbl;
+    gotoPage('admindash', document.querySelector('#adminNav .nav-item'));
+    loadAdminDash();
+  }
+  updateBadge();
+}
+
+function doLogout() {
+  clearSession();
+  $('mainApp').classList.add('hidden');
+  $('hostelScreen').classList.remove('hidden');
+}
+
+// ── QR GENERATION ──
+// Each student gets a unique QR encoding their Student ID
+// Staff decodes it and enters the ID to mark attendance
+function generateQR() {
+  if(G.qrDone || !G.user || !G.user.studentId) return;
+  const data = G.user.studentId;
+
+  // dashQr — medium size on dashboard
+  const dash = $('dashQr');
+  if(dash) {
+    dash.innerHTML = '';
+    try {
+      new QRCode(dash, {
+        text: data,
+        width: 110,        // increased from 110
+        height: 110,
+        colorDark: '#000000',
+        colorLight: '#ffffff',
+        correctLevel: QRCode.CorrectLevel.H  // highest error correction
+      });
+    } catch(e) { dash.innerHTML = '<div style="color:var(--muted);font-size:11px;">QR Error</div>'; }
+  }
+
+  // profileQr — large size on profile page (easier to scan)
+  const prof = $('profileQr');
+  if(prof) {
+    prof.innerHTML = '';
+    try {
+      new QRCode(prof, {
+        text: data,
+        width: 220,        // increased from 180
+        height: 220,
+        colorDark: '#000000',
+        colorLight: '#ffffff',
+        correctLevel: QRCode.CorrectLevel.H
+      });
+    } catch(e) { prof.innerHTML = '<div style="color:var(--muted);font-size:11px;">QR Error</div>'; }
+  }
+
+  G.qrDone = true;
+}
+
+// ── NAVIGATION ──
+function gotoPage(page, el) {
+  document.querySelectorAll('[id^="page-"]').forEach(p => p.classList.add('hidden'));
+  $('page-'+page).classList.remove('hidden');
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  if(el) el.classList.add('active');
+  const titles = {dashboard:'Dashboard',menu:"Today's Menu",vote:'Vote for Meal',profile:'Profile & QR',scanner:'QR Scanner',staffspecial:'Special Orders',todaylog:"Today's Log",admindash:'Admin Dashboard',students:'All Students',staffmanage:'Manage Staff',menumanage:'Manage Menu',adminspecial:'Special Orders'};
+  $('pageTitle').textContent = titles[page]||page;
+  $('notifPanel').classList.remove('open');
+  if(page==='menu') loadMenuPage();
+  if(page==='students') loadAllStudents();
+  if(page==='staffmanage') loadAllStaff();
+  if(page==='adminspecial') loadAdminAllSpecial();
+  if(page==='staffspecial') loadStaffSpecial();
+  if(page==='scanner') setTimeout(startCamera, 300);
+  if(page!=='scanner') stopCamera();
+  if(page==='admindash') loadAdminDash();
+  if(page==='todaylog') {
+    const today = new Date().toISOString().split('T')[0];
+    G('logDate').value = today;
+    loadTodaysLog();
+    loadTodaysSpecialOrders();
+  }
+  if(page==='profile' && !G.qrDone) generateQR();
+}
+
+// ── CREDITS ──
+function updateCredits(v) {
+  const days = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate();
+  $('creditDisplay').textContent = v; $('creditLabel').textContent = `of ${days} this month`;
+  $('creditFill').style.width = `${Math.max(0,(v/days)*100)}%`;
+  $('pCredits').textContent = `${v} / ${days}`;
+}
+
+// ── LOAD STUDENT PROFILE FROM DB ──
+async function loadCreditHistory() {
+  try {
+    const r = await fetch(`${API}/student/profile`, {headers:{'Authorization':`Bearer ${G.token}`}});
+    if(!r.ok) return;
+    const d = await r.json();
+    G.user.credits = d.credits; G.user.specialBill = d.specialBill;
+    localStorage.setItem('mm_usr', JSON.stringify(G.user));
+    updateCredits(d.credits);
+    $('pBill').textContent = `₹${d.specialBill||0}`;
+    if($('billDisplay')) $('billDisplay').textContent = `₹${d.specialBill||0}`;
+
+    // Build real credit history
+    const el = $('creditHistory'); el.innerHTML = '';
+    if(d.lastMealDate) {
+      const row = document.createElement('div');
+      row.className = 'pend-item';
+      row.innerHTML = `<span>🍽️ Last meal marked — ${d.lastMealDate}</span><span style="color:var(--red);font-weight:700;">-1 credit</span>`;
+      el.appendChild(row);
+    }
+    const days = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate();
+    const row2 = document.createElement('div');
+    row2.className = 'pend-item';
+    row2.style.background = 'rgba(34,197,94,.06)';
+    row2.style.border = '1px solid rgba(34,197,94,.15)';
+    row2.innerHTML = `<span>🎉 Monthly credits assigned</span><span style="color:var(--green);font-weight:700;">+${days} credits</span>`;
+    el.appendChild(row2);
+    if(el.children.length === 0) el.innerHTML = '<div style="color:var(--muted);font-size:12px;">No activity yet.</div>';
+  } catch(e){ $('creditHistory').innerHTML='<div style="color:var(--muted);font-size:12px;">Could not load.</div>'; }
+}
+
+// ── TODAY'S MENU ON DASHBOARD ──
+async function loadDashboardMenu() {
+  const el = $('dashMenu');
+  try {
+    const r = await fetch(`${API}/menu/today`, {headers:{'Authorization':`Bearer ${G.token}`}});
+    const d = await r.json();
+    if(!d.menu){el.innerHTML='<div style="color:var(--muted);font-size:12px;">📭 No menu set for today yet.</div>'; return;}
+    const m = d.menu;
+    el.innerHTML = `
+      <div style="margin-bottom:9px;"><span class="meal-tag mt-breakfast">🌅 Breakfast</span><div style="font-size:12px;color:#cbd5e1;margin-top:3px;">${m.breakfast.join(', ')||'—'}</div>
+        <div class="stars" id="dbfStars">${[1,2,3,4,5].map(n=>`<span class="star" onclick="rateStar('dbfStars',${n})">★</span>`).join('')}</div></div>
+      <div style="margin-bottom:9px;"><span class="meal-tag mt-lunch">☀️ Lunch</span><div style="font-size:12px;color:#cbd5e1;margin-top:3px;">${m.lunch.join(', ')||'—'}</div>
+        <div class="stars" id="dlStars">${[1,2,3,4,5].map(n=>`<span class="star" onclick="rateStar('dlStars',${n})">★</span>`).join('')}</div></div>
+      <div><span class="meal-tag mt-dinner">🌙 Dinner</span><div style="font-size:12px;color:#cbd5e1;margin-top:3px;">${m.dinner.join(', ')||'—'}</div>
+        <div class="stars" id="ddStars">${[1,2,3,4,5].map(n=>`<span class="star" onclick="rateStar('ddStars',${n})">★</span>`).join('')}</div></div>`;
+  } catch(e){ el.innerHTML='<div style="color:var(--muted);font-size:12px;">Could not load menu.</div>'; }
+}
+
+// ── MENU PAGE ──
+async function loadMenuPage() {
+  const el = $('menuGrid'); el.innerHTML='<div class="loading-txt" style="grid-column:span 3;">Loading...</div>';
+  try {
+    const r = await fetch(`${API}/menu/today`, {headers:{'Authorization':`Bearer ${G.token}`}});
+    const d = await r.json();
+    if(!d.menu){el.innerHTML='<div class="loading-txt" style="grid-column:span 3;">📭 No menu set for today.</div>'; return;}
+    const m = d.menu;
+    const meals = [
+      {tag:'mt-breakfast',label:'🌅 Breakfast',time:'8:00 AM – 10:00 AM',items:m.breakfast,sid:'mBf'},
+      {tag:'mt-lunch',label:'☀️ Lunch',time:'12:00 PM – 2:00 PM',items:m.lunch,sid:'mLn'},
+      {tag:'mt-dinner',label:'🌙 Dinner',time:'8:00 PM – 9:30 PM',items:m.dinner,sid:'mDn'}
+    ];
+    el.innerHTML = meals.map(x=>`
+      <div class="meal-card">
+        <span class="meal-tag ${x.tag}">${x.label}</span>
+        <div class="meal-time">${x.time}</div>
+        <ul class="meal-items">${x.items.map(i=>`<li>${i.trim()}</li>`).join('')}</ul>
+        <div class="stars" id="${x.sid}">${[1,2,3,4,5].map(n=>`<span class="star" onclick="rateStar('${x.sid}',${n})">★</span>`).join('')}</div>
+      </div>`).join('');
+  } catch(e){ el.innerHTML='<div class="loading-txt" style="grid-column:span 3;">Could not load menu.</div>'; }
+}
+function rateStar(id, n){ document.querySelectorAll(`#${id} .star`).forEach((s,i)=>s.classList.toggle('lit',i<n)); }
+
+// ── VOTE ──
+async function castVote(v) {
+  $('vYes').classList.toggle('active',v==='yes'); $('vNo').classList.toggle('active',v==='no');
+  $('voteDisplay').textContent = v==='yes'?'✅ Yes':'❌ No';
+  
+  // Save vote to backend
+  try {
+    const r = await fetch(`${API}/vote/vote`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${G.token}` },
+      body: JSON.stringify({ vote: v })
+    });
+    const d = await r.json();
+    if(r.ok) {
+      addNotif(`✅ Your vote for today: ${v === 'yes' ? 'Yes, eating' : 'Skipping'}`);
+    } else {
+      console.error('Vote save failed:', d.message);
+    }
+  } catch(e) {
+    console.error('Vote submission error:', e);
+  }
+}
+
+// ── NOTIFICATIONS ──
+function toggleNotif(){ $('notifPanel').classList.toggle('open'); }
+function markAllRead(){ document.querySelectorAll('.notif-item').forEach(n=>{n.classList.remove('unread');n.querySelector('.ndot').classList.add('read');}); updateBadge(); }
+document.addEventListener('click',e=>{
+  const p=$('notifPanel'),b=$('notifBtn');
+  if(p&&b&&!p.contains(e.target)&&!b.contains(e.target)) p.classList.remove('open');
+});
+
+// ── SCANNER SETUP ──
+let qrScanner = null;
+let pendingScanId = null;
+let scanLocked = false; // prevents duplicate scans
+
+function startCamera() {
+  if(qrScanner) {
+    qrScanner.stop().catch(()=>{});
+    qrScanner = null;
+  }
+
+  const readerEl = $('qr-reader');
+  if(!readerEl) return;
+  readerEl.innerHTML = '';
+
+  qrScanner = new Html5Qrcode('qr-reader', {
+    verbose: false
+  });
+
+  const config = {
+    fps: 15,                        // increased from 10
+    qrbox: { width: 200, height: 200 },
+    aspectRatio: 1.0,
+    disableFlip: false,             // allow mirrored QR too
+    experimentalFeatures: {
+      useBarCodeDetectorIfSupported: true  // use native browser detector if available — faster
+    }
+  };
+
+  qrScanner.start(
+    { facingMode: 'environment' },
+    config,
+    onQrSuccess,
+    onQrError
+  ).then(() => {
+    $('scanStatus').textContent = '📷 Camera active — hold QR steady in the box';
+    $('scanStatus').style.color = 'var(--green)';
+  }).catch(err => {
+    // Try front camera if back camera fails
+    qrScanner.start(
+      { facingMode: 'user' },
+      config,
+      onQrSuccess,
+      onQrError
+    ).then(() => {
+      $('scanStatus').textContent = '📷 Camera active (front) — hold QR steady';
+      $('scanStatus').style.color = 'var(--green)';
+    }).catch(err2 => {
+      $('scanStatus').innerHTML = '⚠️ Camera blocked.<br><span style="font-size:11px;">Allow camera in browser settings or use manual entry below.</span>';
+      $('scanStatus').style.color = 'var(--yellow)';
+    });
+  });
+}
+
+function stopCamera() {
+  if(qrScanner) {
+    qrScanner.stop().then(()=>{ qrScanner.clear(); qrScanner=null; }).catch(()=>{});
+  }
+}
+
+function onQrSuccess(decodedText) {
+  // decodedText = studentId (e.g. EN22410001)
+  if(scanLocked) return; // ignore while popup is open
+  scanLocked = true;
+  openScanPopup(decodedText.trim().toUpperCase());
+}
+
+function onQrError(err) {
+  // Ignore — fires continuously when no QR in frame
+}
+
+// ── OPEN SCAN POPUP ──
+async function openScanPopup(studentId) {
+  pendingScanId = studentId;
+
+  // First fetch student info WITHOUT deducting credits
+  try {
+    const r = await fetch(`${API}/student/info/${studentId}`, {
+      headers: { 'Authorization': `Bearer ${G.token}` }
+    });
+    const d = await r.json();
+
+    if(!r.ok) {
+      // Student not found or wrong hostel
+      $('smName').textContent = 'Unknown';
+      $('smId').textContent = studentId;
+      $('smRoom').textContent = '—';
+      $('smCredits').textContent = '—';
+      $('scanModalIcon').textContent = '❌';
+      $('scanModalTitle').textContent = 'Student Not Found';
+      $('scanModalSub').textContent = d.message || 'This QR does not belong to a registered student.';
+      $('smStatusBox').style.background = 'rgba(239,68,68,.1)';
+      $('smStatusBox').style.color = 'var(--red)';
+      $('smStatusBox').style.border = '1px solid rgba(239,68,68,.2)';
+      $('smStatusBox').textContent = '❌ ' + (d.message || 'Not found');
+      $('smConfirmBtn').style.display = 'none';
+    } else {
+      $('smName').textContent = d.name;
+      $('smId').textContent = d.studentId;
+      $('smRoom').textContent = d.room;
+      $('smCredits').textContent = d.credits + '/30';
+
+      G.lastScanned = { studentId: d.studentId, name: d.name, room: d.room, credits: d.credits };
+      $('spStaffStudent').value = `${d.name} (${d.room})`;
+
+      const today = new Date().toLocaleDateString('en-CA');
+      if(d.lastMealDate === today) {
+        // Already marked today
+        $('scanModalIcon').textContent = '⚠️';
+        $('scanModalTitle').textContent = 'Already Marked Today';
+        $('scanModalSub').textContent = 'This student has already been marked for today.';
+        $('smStatusBox').style.background = 'rgba(234,179,8,.1)';
+        $('smStatusBox').style.color = 'var(--yellow)';
+        $('smStatusBox').style.border = '1px solid rgba(234,179,8,.2)';
+        $('smStatusBox').textContent = '⚠️ No credit will be deducted (already marked today)';
+        $('smConfirmBtn').style.display = 'none'; // hide confirm if already marked
+      } else if(d.credits <= 0) {
+        $('scanModalIcon').textContent = '🚫';
+        $('scanModalTitle').textContent = 'No Credits Left';
+        $('scanModalSub').textContent = 'This student has 0 credits remaining.';
+        $('smStatusBox').style.background = 'rgba(239,68,68,.1)';
+        $('smStatusBox').style.color = 'var(--red)';
+        $('smStatusBox').style.border = '1px solid rgba(239,68,68,.2)';
+        $('smStatusBox').textContent = '🚫 Cannot mark — 0 credits remaining';
+        $('smConfirmBtn').style.display = 'none';
+      } else {
+        $('scanModalIcon').textContent = '✅';
+        $('scanModalTitle').textContent = 'Student Found';
+        $('scanModalSub').textContent = 'Confirm to mark attendance and deduct 1 credit.';
+        $('smStatusBox').style.background = 'rgba(34,197,94,.1)';
+        $('smStatusBox').style.color = 'var(--green)';
+        $('smStatusBox').style.border = '1px solid rgba(34,197,94,.2)';
+        $('smStatusBox').textContent = '✅ 1 credit will be deducted after confirmation';
+        $('smConfirmBtn').style.display = 'block';
+      }
+    }
+  } catch(e) {
+    $('smName').textContent = studentId;
+    $('smId').textContent = studentId;
+    $('smStatusBox').textContent = '❌ Cannot connect to server.';
+    $('smStatusBox').style.color = 'var(--red)';
+    $('smConfirmBtn').style.display = 'none';
+  }
+
+  $('scanModal').classList.add('open');
+}
+
+// ── CONFIRM SCAN (Staff clicks OK) ──
+async function confirmScan() {
+  if(!pendingScanId) return;
+  $('smConfirmBtn').disabled = true;
+  $('smConfirmBtn').textContent = 'Marking...';
+
+  try {
+    const r = await fetch(`${API}/scan`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${G.token}` },
+      body: JSON.stringify({ studentId: pendingScanId })
+    });
+    const d = await r.json();
+
+    if(r.ok && !d.alreadyMarked) {
+      // Update popup to show success
+      $('scanModalIcon').textContent = '🎉';
+      $('scanModalTitle').textContent = 'Attendance Marked!';
+      $('smCredits').textContent = d.student.credits + '/30';
+      $('smStatusBox').textContent = `✅ Done! Credits remaining: ${d.student.credits}`;
+      $('smConfirmBtn').style.display = 'none';
+
+      // Add to today's log
+      const tb = $('logTbl');
+      if(tb.querySelector('.tbl-empty')) tb.innerHTML = '';
+      const row = tb.insertRow(0);
+      const t = new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
+      row.innerHTML = `<td>${d.student.name}</td><td>${d.student.room}</td><td>${t}</td><td>${d.student.credits}/30</td><td><span class="badge b-green">Marked ✓</span></td>`;
+
+      // Refresh today's log with explicit date
+      const today = new Date().toISOString().split('T')[0];
+      const dateEl = $('logDate');
+      if(dateEl) dateEl.value = today;
+      loadTodaysLog();
+
+      // Prefill special order section
+      G.lastScanned = d.student;
+      $('spStaffStudent').value = `${d.student.name} (${d.student.room})`;
+
+      // Auto close popup after 2 seconds
+      setTimeout(() => {
+        cancelScan();
+      }, 2000);
+    }
+  } catch(e) {
+    $('smStatusBox').textContent = '❌ Server error. Try again.';
+    $('smStatusBox').style.color = 'var(--red)';
+  }
+
+  $('smConfirmBtn').disabled = false;
+  $('smConfirmBtn').textContent = '✅ Mark Attendance';
+}
+
+function cancelScan() {
+  $('scanModal').classList.remove('open');
+  pendingScanId = null;
+  scanLocked = false; // unlock scanner for next QR
+}
+
+// Manual entry fallback
+async function doManualScan() {
+  const sid = $('scanInput').value.trim().toUpperCase();
+  if(!sid) return;
+  $('scanInput').value = '';
+  await openScanPopup(sid);
+}
+
+// ── LOAD STAFF SPECIAL ORDERS ──
+async function loadStaffSpecial() {
+  const tb=$('staffSpecialTbl');
+  try {
+    const r=await fetch(`${API}/special/all`,{headers:{'Authorization':`Bearer ${G.token}`}});
+    const d=await r.json();
+    const approved=(Array.isArray(d)?d:[]).filter(o=>o.status==='approved' || o.status==='confirmed');
+    if(!approved.length){tb.innerHTML='<tr><td colspan="6" class="tbl-empty">No approved special orders yet.</td></tr>';return;}
+    tb.innerHTML=approved.map(o=>`<tr>
+      <td>${o.studentName}</td><td>${o.room}</td><td><b>${o.itemName}</b></td>
+      <td><span class="badge b-blue">${o.mealTime}</span></td>
+      <td style="color:var(--purple);font-weight:700;">₹${o.cost}</td>
+      <td><span class="badge b-green">Approved</span></td></tr>`).join('');
+  } catch(e){tb.innerHTML='<tr><td colspan="6" class="tbl-empty">Could not load.</td></tr>';}
+}
+
+// ── STUDENT SPECIAL ORDER ──
+function submitSpecial() {
+  const item=$('spItemName').value.trim(), time=$('spMealTime').value;
+  if(!item){alert('Please enter an item name.');return;}
+  $('modalBody').innerHTML=`
+    <div style="padding:12px;background:var(--surface2);border-radius:10px;margin-bottom:10px;">
+      <div style="font-size:14px;font-weight:700;">⭐ ${item}</div>
+      <div style="font-size:12px;color:var(--muted);margin-top:3px;">For: ${time}</div>
+    </div>
+    <div style="font-size:12px;color:var(--muted);">Admin will set the cost and approve/reject your request. You'll see the status on your dashboard.</div>`;
+  $('specialModal').classList.add('open');
+}
+async function confirmSpecial() {
+  const item=$('spItemName').value.trim(), time=$('spMealTime').value;
+  closeModal();
+  try {
+    const r=await fetch(`${API}/special/request`,{method:'POST',headers:{'Content-Type':'application/json','Authorization':`Bearer ${G.token}`},body:JSON.stringify({itemName:item,mealTime:time})});
+    const d=await r.json();
+    if(r.ok){$('spItemName').value=''; addNotif(`⭐ Your request "${item}" submitted to admin.`); loadMyOrders();}
+    else alert(d.message||'Could not submit.');
+  } catch(e){alert('Cannot connect to server.');}
+}
+
+async function staffAddSpecial() {
+  const student = G.lastScanned;
+  const item = $('spStaffItem').value.trim();
+  const mealTime = $('spStaffTime').value;
+  const cost = parseFloat($('spStaffCost').value || '0');
+  const feedback = $('spStaffResult');
+
+  if(!student) {
+    feedback.textContent = '⚠️ Please scan a student first (or use manual scan).';
+    feedback.style.color = 'var(--yellow)';
+    return;
+  }
+  if(!item) {
+    feedback.textContent = '⚠️ Enter item name first.';
+    feedback.style.color = 'var(--yellow)';
+    return;
+  }
+  if(isNaN(cost) || cost < 0) {
+    feedback.textContent = '⚠️ Enter a valid cost (>= 0).';
+    feedback.style.color = 'var(--yellow)';
+    return;
+  }
+
+  feedback.textContent = 'Saving special order...';
+  feedback.style.color = 'var(--muted)';
+
+  try {
+    const r = await fetch(`${API}/special/staff-add`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${G.token}` },
+      body: JSON.stringify({ studentId: student.studentId, itemName: item, mealTime, cost })
+    });
+    const d = await r.json();
+    if(!r.ok) {
+      feedback.textContent = d.message || 'Failed to add special order.';
+      feedback.style.color = 'var(--red)';
+      return;
+    }
+
+    feedback.textContent = `✅ Special order added for ${student.name}. ₹${cost} billed.`;
+    feedback.style.color = 'var(--green)';
+    $('spStaffItem').value = '';
+    $('spStaffCost').value = '';
+
+    addNotif(`⭐ Special order for ${student.name} recorded (₹${cost}). Admin and student notified.`);
+    loadStaffSpecial();
+
+  } catch(e) {
+    feedback.textContent = '❌ Cannot connect to server.';
+    feedback.style.color = 'var(--red)';
+  }
+}
+
+function closeModal(){ $('specialModal').classList.remove('open'); }
+
+// ── MY SPECIAL ORDERS (Student) ──
+async function loadMyOrders() {
+  const el=$('myOrdersList');
+  try {
+    const r=await fetch(`${API}/special/my-orders`,{headers:{'Authorization':`Bearer ${G.token}`}});
+    const d=await r.json();
+    if(!d.length){el.innerHTML='<div style="font-size:11px;color:var(--muted);">No requests yet.</div>';return;}
+    el.innerHTML=d.slice(0,4).map(o=>`
+      <div class="pend-item">
+        <span>⭐ ${o.itemName} <span style="font-size:10px;color:var(--muted);">(${o.mealTime})</span></span>
+        <span style="display:flex;gap:5px;align-items:center;">
+          ${o.cost>0?`<span style="color:var(--purple);font-weight:700;font-size:12px;">₹${o.cost}</span>`:''}
+          <span class="ptag ${(o.status==='approved'||o.status==='confirmed')?'pt-ok':o.status==='rejected'?'pt-no':'pt-wait'}">${o.status==='confirmed'?'approved by staff':o.status}</span>
+        </span>
+      </div>`).join('');
+  } catch(e){el.innerHTML='<div style="font-size:11px;color:var(--muted);">Could not load.</div>';}
+}
+
+// ── ADMIN DASHBOARD ──
+async function loadAdminDash() {
+  try {
+    const [sr, sfr, spr] = await Promise.all([
+      fetch(`${API}/student/all`,       { headers: { 'Authorization': `Bearer ${G.token}` } }),
+      fetch(`${API}/student/all-staff`, { headers: { 'Authorization': `Bearer ${G.token}` } }),
+      fetch(`${API}/special/all`,       { headers: { 'Authorization': `Bearer ${G.token}` } })
+    ]);
+
+    const students = await sr.json();
+    const staff    = await sfr.json();
+    const specials = await spr.json();
+
+    $('adStudents').textContent = Array.isArray(students) ? students.length : '—';
+    $('adStaff').textContent    = Array.isArray(staff)    ? staff.length    : '—';
+
+    // Count only pending student requests
+    const pending = Array.isArray(specials)
+      ? specials.filter(o => o.status === 'pending' && o.addedBy === 'student')
+      : [];
+    $('adPending').textContent = pending.length;
+
+    // Pending table — student requests only, with approve/reject
+    const tb = $('adPendingTbl');
+    if(!pending.length) {
+      tb.innerHTML = '<tr><td colspan="7" class="tbl-empty">No pending student requests. ✅</td></tr>';
+    } else {
+      tb.innerHTML = pending.map(o => `
+        <tr id="pr-${o._id}">
+          <td><b>${o.studentName}</b></td>
+          <td>${o.room}</td>
+          <td>${o.itemName}</td>
+          <td><span class="badge b-blue">${o.mealTime}</span></td>
+          <td>${o.date}</td>
+          <td>
+            <input type="number" id="cost-${o._id}" placeholder="₹ e.g. 30" min="0"
+              style="width:100px;padding:5px 8px;background:var(--bg);border:1px solid var(--border);
+              border-radius:7px;color:var(--text);font-size:12px;outline:none;"/>
+          </td>
+          <td style="display:flex;gap:5px;">
+            <button class="sm-btn sm-success" onclick="approveOrder('${o._id}')">✓ Approve</button>
+            <button class="sm-btn sm-danger"  onclick="rejectOrder('${o._id}')">✕ Reject</button>
+          </td>
+        </tr>`).join('');
+    }
+
+    // Load today's vote summary
+    loadVoteSummary();
+
+  } catch(e) { console.error(e); }
+}
+
+// ── SET MONTHLY CREDITS ──
+async function setMonthlyCredits() {
+  const monthInput = G('creditMonth');
+  const status = G('creditStatus');
+  const month = monthInput.value;
+  if(!month) {
+    status.textContent = 'Please select a month.';
+    status.style.color = 'var(--red)';
+    return;
+  }
+  const [year, mon] = month.split('-');
+  const days = new Date(year, parseInt(mon), 0).getDate();
+  status.textContent = `Setting credits to ${days} for ${month}...`;
+  status.style.color = 'var(--text)';
+  try {
+    const r = await fetch(`${API}/student/reset-credits`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${G.token}` },
+      body: JSON.stringify({ credits: days })
+    });
+    const d = await r.json();
+    if(r.ok) {
+      status.textContent = d.message;
+      status.style.color = 'var(--green)';
+      loadAdminDash(); // refresh stats if needed
+    } else {
+      status.textContent = d.message || 'Failed to reset credits.';
+      status.style.color = 'var(--red)';
+    }
+  } catch(e) {
+    status.textContent = 'Error connecting to server.';
+    status.style.color = 'var(--red)';
+  }
+}
+
+// ── LOAD VOTE SUMMARY ──
+async function loadVoteSummary() {
+  try {
+    const r = await fetch(`${API}/vote/summary/today`, { headers: { 'Authorization': `Bearer ${G.token}` } });
+    const data = await r.json();
+    if(r.ok) {
+      $('adVoteYes').textContent = data.yes;
+      $('adVoteNo').textContent = data.no;
+      $('adVoteAbstain').textContent = data.abstain;
+    } else {
+      console.error('Failed to load vote summary:', data.message);
+    }
+  } catch(e) {
+    console.error('Vote summary error:', e);
+  }
+}
+async function approveOrder(id) {
+  const costEl=$(`cost-${id}`), cost=parseFloat(costEl?costEl.value:0)||0;
+  try {
+    const r=await fetch(`${API}/special/${id}/approve`,{method:'PATCH',headers:{'Content-Type':'application/json','Authorization':`Bearer ${G.token}`},body:JSON.stringify({cost})});
+    if(r.ok){const row=$(`pr-${id}`);if(row)row.remove();loadAdminDash();alert(`✅ Approved! ₹${cost} added to student's bill.`);}
+    else{const d=await r.json();alert(d.message||'Failed to approve.');}
+  } catch(e){alert('Cannot connect to server.');}
+}
+async function rejectOrder(id) {
+  if(!confirm('Reject this special order?')) return;
+  try {
+    const r=await fetch(`${API}/special/${id}/reject`,{method:'PATCH',headers:{'Authorization':`Bearer ${G.token}`}});
+    if(r.ok){const row=$(`pr-${id}`);if(row)row.remove();loadAdminDash();}
+  } catch(e){alert('Cannot connect.');}
+}
+
+// ── LOAD TODAY'S LOG ──
+async function loadTodaysLog() {
+  let date = G('logDate').value;
+  console.log('DEBUG: Raw logDate.value:', date);
+  
+  if(!date) {
+    date = new Date().toISOString().split('T')[0];
+    console.log('DEBUG: Generated today date:', date);
+    const dateEl = G('logDate');
+    if(dateEl) dateEl.value = date;
+  }
+  
+  console.log('DEBUG: Final date for API call:', date);
+  console.log('DEBUG: API endpoint:', `${API}/scan/attendance?date=${date}`);
+  
+  try {
+    const r = await fetch(`${API}/scan/attendance?date=${date}`, { headers: { 'Authorization': `Bearer ${G.token}` } });
+    console.log('DEBUG: Response status:', r.status, r.ok);
+    const attendances = await r.json();
+    console.log('DEBUG: Attendance data received:', attendances);
+    
+    const tb = $('logTbl');
+    if (!Array.isArray(attendances) || !attendances.length) {
+      console.log('DEBUG: No attendances found');
+      tb.innerHTML = '<tr><td colspan="5" class="tbl-empty">No attendance for selected date.</td></tr>';
+      $('logStudents').textContent = '0';
+      $('logCredits').textContent = '0';
+      $('logLast').textContent = '—';
+      return;
+    }
+    const n = attendances.length;
+    $('logStudents').textContent = n;
+    $('logCredits').textContent = n; // since each deducts 1
+    $('logLast').textContent = n > 0 ? new Date(attendances[0].markedAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }) : '—';
+    tb.innerHTML = attendances.map(a => `
+      <tr>
+        <td>${a.studentName}</td>
+        <td>${a.room}</td>
+        <td>${new Date(a.markedAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}</td>
+        <td style="font-weight:700;color:${a.credits <= 5 ? 'var(--red)' : 'var(--text)'};">${a.credits}/30</td>
+        <td><span class="badge b-green">${a.markedBy === 'student' ? 'Self' : 'Staff'} ✓ Marked</span></td>
+      </tr>`).join('');
+  } catch (e) {
+    console.error('DEBUG: Load attendance error:', e);
+    $('logTbl').innerHTML = '<tr><td colspan="5" class="tbl-empty">❌ Failed to load log.</td></tr>';
+  }
+
+  // Load special order summary for this date (staff view)
+  loadTodaysSpecialOrders();
+}
+
+async function loadTodaysSpecialOrders() {
+  const date = G('logDate').value;
+  if(!date) return;
+  try {
+    const r = await fetch(`${API}/special/all`, { headers: { 'Authorization': `Bearer ${G.token}` } });
+    const orders = await r.json();
+    const tb = $('specialLogTbl');
+    if(!Array.isArray(orders) || !orders.length) {
+      tb.innerHTML = '<tr><td colspan="6" class="tbl-empty">No special orders for today.</td></tr>';
+      return;
+    }
+
+    const filtered = orders.filter(o => o.date===date && (o.status==='approved' || o.status==='confirmed'));
+    if(!filtered.length) {
+      tb.innerHTML = '<tr><td colspan="6" class="tbl-empty">No special orders for today.</td></tr>';
+      return;
+    }
+
+    tb.innerHTML = filtered.map(o => `
+      <tr>
+        <td>${o.studentName}</td>
+        <td>${o.room}</td>
+        <td>${o.itemName}</td>
+        <td><span class="badge b-blue">${o.mealTime}</span></td>
+        <td style="font-weight:700;color:var(--purple);">₹${o.cost||0}</td>
+        <td><span class="badge ${o.status==='approved' ? 'b-green' : 'b-blue'}">${o.status==='approved' ? 'Admin' : 'Staff'}</span></td>
+      </tr>`).join('');
+  } catch(e) {
+    $('specialLogTbl').innerHTML = '<tr><td colspan="6" class="tbl-empty">❌ Could not load special orders.</td></tr>';
+  }
+}
+
+// ── ADMIN ALL STUDENTS ──
+async function loadAllStudents() {
+  const tb=$('studentsTbl'); tb.innerHTML='<tr><td colspan="7" class="tbl-empty">Loading...</td></tr>';
+  if($('hostelLabel')) $('hostelLabel').textContent = G.user.hostel==='girls'?'Girls Hostel':'Boys Hostel';
+  try {
+    const r=await fetch(`${API}/student/all`,{headers:{'Authorization':`Bearer ${G.token}`}});
+    const d=await r.json();
+    if(!d.length){tb.innerHTML='<tr><td colspan="7" class="tbl-empty">No students registered yet.</td></tr>';return;}
+    tb.innerHTML=d.map(s=>`<tr>
+      <td>${s.firstName} ${s.middleName||''} ${s.lastName}</td>
+      <td style="font-family:'Syne',sans-serif;font-weight:700;">${s.studentId}</td>
+      <td>${s.room}</td><td style="font-size:11px;color:var(--muted);">${s.department||'—'}</td>
+      <td style="color:${s.credits<=5?'var(--red)':'var(--text)'};font-weight:600;">${s.credits}/30</td>
+      <td style="color:var(--purple);font-weight:700;">₹${s.specialBill||0}</td>
+      <td><span class="badge ${s.credits<=5?'b-red':'b-green'}">${s.credits<=5?'Low Credits':'Active'}</span></td>
+    </tr>`).join('');
+  } catch(e){tb.innerHTML='<tr><td colspan="7" class="tbl-empty">Could not load.</td></tr>';}
+}
+async function resetAllCredits() {
+  if(!confirm('Reset ALL students credits to 30?')) return;
+  try {
+    const r=await fetch(`${API}/student/reset-credits`,{method:'POST',headers:{'Authorization':`Bearer ${G.token}`}});
+    const d=await r.json(); alert(d.message); loadAllStudents();
+  } catch(e){alert('Error.');}
+}
+
+// ── ADMIN ALL STAFF ──
+async function loadAllStaff() {
+  const tb=$('staffTbl'); tb.innerHTML='<tr><td colspan="4" class="tbl-empty">Loading...</td></tr>';
+  if($('staffHostelLabel')) $('staffHostelLabel').textContent = G.user.hostel==='girls'?'Girls Hostel':'Boys Hostel';
+  try {
+    const r=await fetch(`${API}/student/all-staff`,{headers:{'Authorization':`Bearer ${G.token}`}});
+    const d=await r.json();
+    if(!d.length){tb.innerHTML='<tr><td colspan="4" class="tbl-empty">No staff yet. Add one →</td></tr>';return;}
+    tb.innerHTML=d.map(s=>`<tr>
+      <td><span style="font-family:'Syne',sans-serif;font-weight:800;">${s.staffId}</span></td>
+      <td>${s.name}</td>
+      <td>${new Date(s.createdAt).toLocaleDateString('en-IN',{month:'short',year:'numeric'})}</td>
+      <td><button class="sm-btn sm-danger" onclick="deleteStaff('${s.staffId}')">Delete</button></td>
+    </tr>`).join('');
+  } catch(e){tb.innerHTML='<tr><td colspan="4" class="tbl-empty">Could not load.</td></tr>';}
+}
+async function addStaff() {
+  const name=$('nStaffName').value.trim(), id=$('nStaffId').value.trim().toUpperCase(), pass=$('nStaffPass').value;
+  if(!name||!id||!pass){showStatus('staffMsg','Please fill all fields.',false);return;}
+  const btn=$('addStaffBtn'); btn.disabled=true; btn.textContent='Creating...';
+  try {
+    const r=await fetch(`${API}/student/create-staff`,{method:'POST',headers:{'Content-Type':'application/json','Authorization':`Bearer ${G.token}`},body:JSON.stringify({name,staffId:id,password:pass})});
+    const d=await r.json();
+    if(r.ok){
+      showStatus('staffMsg',`✅ Staff account created! ID: ${id} | They can now login with this ID and password.`,true);
+      $('nStaffName').value=''; $('nStaffId').value=''; $('nStaffPass').value='';
+      loadAllStaff();
+    } else showStatus('staffMsg',d.message||'Failed.',false);
+  } catch(e){showStatus('staffMsg','❌ Cannot connect to server. Make sure backend is running.',false);}
+  finally{btn.disabled=false;btn.textContent='Create Staff Account →';}
+}
+async function deleteStaff(staffId) {
+  if(!confirm(`Delete staff ${staffId}?`)) return;
+  try {
+    await fetch(`${API}/student/staff/${staffId}`,{method:'DELETE',headers:{'Authorization':`Bearer ${G.token}`}});
+    loadAllStaff();
+  } catch(e){alert('Could not delete.');}
+}
+
+// ── ADMIN ALL SPECIAL ORDERS ──
+async function loadAdminAllSpecial() {
+  const tb = $('adAllSpecialTbl');
+  try {
+    const r = await fetch(`${API}/special/all`, {
+      headers: { 'Authorization': `Bearer ${G.token}` }
+    });
+    const orders = await r.json();
+    if(!Array.isArray(orders) || !orders.length) {
+      tb.innerHTML = '<tr><td colspan="7" class="tbl-empty">No special orders yet.</td></tr>';
+      return;
+    }
+
+    // Calculate totals for billing
+    const confirmed = orders.filter(o => o.status === 'approved' || o.status === 'confirmed');
+    const totalBill = confirmed.reduce((sum, o) => sum + (o.cost || 0), 0);
+    const today     = new Date().toLocaleDateString('en-CA');
+    const todayBill = confirmed.filter(o => o.date === today)
+                               .reduce((sum, o) => sum + (o.cost || 0), 0);
+
+    // Update summary cards if they exist
+    if($('asTotal'))     $('asTotal').textContent     = confirmed.length;
+    if($('asTotalBill')) $('asTotalBill').textContent = `₹${totalBill}`;
+    if($('asTodayBill')) $('asTodayBill').textContent = `₹${todayBill}`;
+
+    tb.innerHTML = orders.map(o => `
+      <tr>
+        <td><b>${o.studentName}</b></td>
+        <td>${o.room}</td>
+        <td>${o.itemName}</td>
+        <td><span class="badge b-blue">${o.mealTime}</span></td>
+        <td style="color:var(--purple);font-weight:700;">
+          ${o.cost > 0 ? '₹'+o.cost : '—'}
+        </td>
+        <td>${o.date}</td>
+        <td>
+          <span class="badge ${
+            (o.status==='approved' && o.addedBy==='staff') ? 'b-blue' :
+            o.status==='approved' ? 'b-green' :
+            o.status==='confirmed' ? 'b-blue' :
+            o.status==='rejected'  ? 'b-red'  : 'b-yellow'
+          }">
+            ${o.addedBy==='staff' ? '✓ Staff' :
+              o.status==='approved' ? '✓ Admin' :
+              o.status==='confirmed' ? '✓ Staff' : o.status}
+          </span>
+          <div style="font-size:10px;color:var(--muted);margin-top:2px;">
+            by ${o.addedBy}
+          </div>
+        </td>
+      </tr>`).join('');
+
+  } catch(e) {
+    tb.innerHTML = '<tr><td colspan="7" class="tbl-empty">Could not load.</td></tr>';
+  }
+}
+// ── SAVE MENU (Admin) ──
+async function saveMenu() {
+  const bf=$('bfInput').value.trim(), ln=$('lunchInput').value.trim(), dn=$('dinnerInput').value.trim();
+  if(!bf||!ln||!dn){showStatus('menuMsg','Please fill all meal fields.',false);return;}
+  try {
+    const r=await fetch(`${API}/menu/set`,{method:'POST',headers:{'Content-Type':'application/json','Authorization':`Bearer ${G.token}`},
+      body:JSON.stringify({breakfast:bf.split(',').map(i=>i.trim()).filter(Boolean),lunch:ln.split(',').map(i=>i.trim()).filter(Boolean),dinner:dn.split(',').map(i=>i.trim()).filter(Boolean)})});
+    const d=await r.json();
+    if(r.ok) showStatus('menuMsg','✅ Menu saved! Students can now see it on their dashboard.',true);
+    else showStatus('menuMsg',d.message||'Failed.',false);
+  } catch(e){showStatus('menuMsg','❌ Cannot connect to server.',false);}
+}
+
+// ── MARK ATTENDANCE ──
+async function markAttendance() {
+  const btn = G('markAttendanceBtn'); btn.disabled = true; btn.textContent = 'Marking...';
+  try {
+    const r = await fetch(`${API}/scan/self`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }
+    });
+    const d = await r.json();
+    if (r.ok) {
+      alert(d.message);
+      updateCredits(d.student.credits);
+    } else {
+      alert(d.message || 'Failed to mark attendance.');
+    }
+  } catch (e) {
+    alert('❌ Cannot connect to server.');
+  } finally {
+    btn.disabled = false; btn.textContent = '📷 Mark Attendance';
+  }
+}
+
+// ── UPDATE CREDIT LIMIT DISPLAY ──
+
+</script>
+</body>
+</html>
